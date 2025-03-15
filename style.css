@@ -1,0 +1,12 @@
+.buttons {
+    display: flex;
+    justify-content: center;
+    /* margin-top: 20px; */
+    align-items: center;
+}
+.buttons-div{
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    align-items: center;
+}
