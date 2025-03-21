@@ -9,37 +9,42 @@ if (!isset($_SESSION['user_id'])) {
 include 'config/connection.php';
 include "includes/header.php";
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+// Fetch programs and courses from the database
+$programsResult = $conn->query("SELECT * FROM programs");
+$coursesResult = $conn->query("SELECT * FROM courses");
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
     $name = $_POST['name'];
+    $f_name = $_POST['f_name'];
     $marks = $_POST['marks'];
-    $email = $_POST['email'];
-    $father_name = $_POST['father_name'];
-    $Phone = $_POST['phone'];
-    $course = $_POST['course'];
     $roll_no = $_POST['roll_no'];
+    $email = $_POST['email'];
+    $phone_no = $_POST['phone_no'];
     $password = $_POST['password'];
-    $last_qualification = $_POST['qualification'];
-    $programme = implode(", ", $_POST['programme']);
+    $last_qualification = $_POST['last_qualification'];
+    $programs = isset($_POST['programs']) ? implode(',', $_POST['programs']) : '';
+    $courses = isset($_POST['courses']) ? implode(',', $_POST['courses']) : '';
     $gender = $_POST['gender'];
     $address = $_POST['address'];
 
-    // Handle the file upload
-    $result_card = $_FILES['result_card']['name'];
-    $target_dir = "uploads/";
-    $target_file = $target_dir . basename($result_card);
-    move_uploaded_file($_FILES['result_card']['tmp_name'], $target_file);
+    if($_FILES['result_card']['name']) {
+        $result_card = 'uploads/' . $_FILES['result_card']['name'];
+        move_uploaded_file($_FILES['result_card']['tmp_name'], $result_card);
+    } else {
+        $result_card = 'uploads/no_image.jpeg'; // Provide a default image if none is uploaded
+    }
+    
+    
 
-    $sql = "INSERT INTO students (name, marks, roll_no, password, last_qualification, programme, gender, result_card, address, email, phone, course, father_name)
-            VALUES ('$name', '$marks', '$roll_no', '$password', '$last_qualification', '$programme', '$gender', '$result_card', '$address' , '$email', '$Phone', '$course', '$father_name')";
+    $sql = "INSERT INTO students (name, father_name, marks, roll_no, email, phone,  password, last_qualification, programme, gender, result_card, address, course) 
+            VALUES ('$name', '$f_name', '$marks', '$roll_no', '$email', '$phone_no', '$password', '$last_qualification', '$programs', '$gender', '$result_card', '$address', '$courses')";
 
     if ($conn->query($sql) === TRUE) {
-        echo "Student added successfully!";
-        header("Location: read.php");
-        exit();
+        echo "Record added successfully!";
+        header("Location: read .php");
     } else {
-        echo "Error: " . $conn->error;
+        echo "Error: " . $sql . "<br>" . $conn->error;
     }
 }
-
-$conn->close();
 ?>

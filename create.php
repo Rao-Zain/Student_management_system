@@ -1,4 +1,3 @@
-<!-- create.php -->
 <?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
@@ -9,36 +8,10 @@ if (!isset($_SESSION['user_id'])) {
 <?php
 include 'config/connection.php';
 include "includes/header.php";
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    $name = $_POST['name'];
-    $marks = $_POST['marks'];
-    $roll_no = $_POST['roll_no'];
-    $password = $_POST['password'];
-    $last_qualification = $_POST['last_qualification'];
-    $programme = $_POST['programme'];
-    $gender = $_POST['gender'];
-    $address = $_POST['address'];
-    
-    // Handling Image Upload
-    $result_card = $_FILES['result_card']['name'];
-    $target_dir = "uploads/";
-    $target_file = $target_dir . basename($_FILES["result_card"]["name"]);
-    move_uploaded_file($_FILES["result_card"]["tmp_name"], $target_file);
-
-    // Inserting Data into the Database
-    $sql = "INSERT INTO students (name, marks, roll_no, password, last_qualification, programme, gender, result_card, address) 
-            VALUES ('$name', '$marks', '$roll_no', '$password', '$last_qualification', '$programme', '$gender', '$target_file', '$address')";
-
-    if ($conn->query($sql) === TRUE) {
-        echo "Record added successfully!";
-        header("Location: index.php"); // Redirecting to the main page
-    } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
-    }
-}
+$programsResult = $conn->query("SELECT * FROM programs");
+$coursesResult = $conn->query("SELECT * FROM courses");
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,8 +31,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <input type="text" name="name" class="form-control" required>
         </div>
         <div class="form-group">
-            <label>Father's Name:</label>
-            <input type="text" name="father_name" class="form-control" required>
+            <label>Father Name:</label>
+            <input type="text" name="f_name" class="form-control" required>
         </div>
 
         <div class="form-group">
@@ -78,47 +51,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <div class="form-group">
-            <label for="qualification">Last Qualification:</label>
-        <select name="qualification" class="form-control" required>
-                        <option value="">Select Qualification</option>
-                        <option value="Matric">Matric</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Bachelor">Bachelor</option>
-                    </select>
+            <label>Last Qualification:</label>
+            <select name="last_qualification" class="form-control" required>
+                <option value="">Select Qualification</option>
+                <option value="Matric">Matric</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Bachelor">Bachelor</option>
+            </select>
         </div>
 
-        <!-- <div class="form-group"> -->
-            
-        <tr>
-                <td class="form-group">Select Programs :</td>
-                <td class="inline-group">
-                    <label><input  type="checkbox" name="programme[]" value="BS(IT)"> BS(IT)</label>
-                    <label><input type="checkbox" name="programme[]" value="BS(PA)"> BS(PA)</label>
-                    <label><input type="checkbox" name="programme[]" value="BS(Eng)"> BS(Eng)</label>
-                    <label><input type="checkbox" name="programme[]" value="BS(Soc)"> BS(Soc)</label>
-                </td>
-            </tr> 
-         <!-- </div> -->
-         <div class="form-group">
-            <label>Email:</label>
-            <input type="text" name="email" class="form-control" required>
+        <div class="form-group">
+            <label>Select Programs:</label><br>
+            <?php while ($program = $programsResult->fetch_assoc()) { ?>
+                <label><input type="checkbox" name="programs[]" value="<?php echo $program['program_name']; ?>"> <?php echo $program['program_name']; ?></label><br>
+            <?php } ?>
         </div>
+        <div class="form-group">
+            <label>Email:</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+
         <div class="form-group">
             <label>Phone No:</label>
-            <input type="text" name="phone" class="form-control" required>
+            <input type="number" name="phone_no" class="form-control" required>
         </div>
+
         <div class="form-group">
-            <label>Gender:</label>
-           
-                <td class="inline-group">
-                    <label><input type="radio" name="gender" value="Male"> Male</label>
-                    <label><input type="radio" name="gender" value="Female"> Female</label>
-                </td>
+            <label>Select Courses:</label><br>
+            <?php while ($course = $coursesResult->fetch_assoc()) { ?>
+                <label><input type="checkbox" name="courses[]" value="<?php echo $course['course_name']; ?>"> <?php echo $course['course_name']; ?></label><br>
+            <?php } ?>
         </div>
+
         <div class="form-group">
-            <label>Course:</label>
-            <input type="text" name="course" class="form-control" required>
+            <label>Gender:</label><br>
+            <label><input type="radio" name="gender" value="Male"> Male</label>
+            <label><input type="radio" name="gender" value="Female"> Female</label>
         </div>
+
         <div class="form-group">
             <label>Upload Picture (Result Card):</label>
             <input type="file" name="result_card" class="form-control-file" required>

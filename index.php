@@ -2,7 +2,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: ../auth/login.php");
     exit();
 }
 ?>
@@ -66,7 +66,41 @@ $conn->close();
             <h2 class="text-xl font-bold mb-4">Female Students</h2>
             <p class="text-3xl"><?php echo $female_students; ?></p>
         </div>
-    </div>
+        <div class="bg-white shadow-lg rounded-lg p-6">  
+          <h2 class="text-xl font-bold mb-4 manage"> 
+              <a href="teachers/teacher_dashboard.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Teacher's Dashboard</a></h2>
+         </div>
+        <div class="bg-white shadow-lg rounded-lg p-6">  
+          <h2 class="text-xl font-bold mb-4 manage"> 
+              <a href="teachers/assign_subjects.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Assign a Subject</a></h2>
+         </div>
+        <div class="bg-white shadow-lg rounded-lg p-6">  
+          <h2 class="text-xl font-bold mb-4 manage"> 
+              <a href="attendance/attendance.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Mark Attendance</a></h2>
+         </div>
+       
+        <div class="bg-white shadow-lg rounded-lg p-6">  
+          <h2 class="text-xl font-bold mb-4 manage"> 
+              <a href="attendance/view.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">View Attendance</a></h2>
+         </div>
+    <?php    
+      //session_start();
+if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'admin') {
+    
+    echo '
+
+        <div class="bg-white shadow-lg rounded-lg p-6">  
+          <h2 class="text-xl font-bold mb-4 manage">   <a href="programms/manage_programs.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm"">Manage Programs</a></h2>
+         </div>
+         <div class="bg-white shadow-lg rounded-lg p-6">
+             <h2 class="text-xl font-bold mb-4 manage"> <a href="programms/manage_courses.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Manage Courses</a></h2>
+        </div>
+        <div class="bg-white shadow-lg rounded-lg p-6">
+          <h2 class="text-xl font-bold mb-4 manage">   <a href="manage_users.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Manage Users</a></h2>
+        </div>';
+}
+    ?>
+ </div>
 
     <!-- Action Buttons -->
     <!-- <div class="flex space-x-4 mb-6">

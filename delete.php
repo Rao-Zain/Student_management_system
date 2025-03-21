@@ -17,7 +17,7 @@ if (isset($_GET['id'])) {
         mysqli_begin_transaction($conn);
         
         // Get the image filename before deletion
-        $query = "SELECT result_card  FROM students WHERE id = ?";
+        $query = "SELECT result_card FROM students WHERE id = ?";
         $stmt = mysqli_prepare($conn, $query);
         
         if (!$stmt) {
@@ -29,7 +29,7 @@ if (isset($_GET['id'])) {
         $result = mysqli_stmt_get_result($stmt);
         
         if ($row = mysqli_fetch_assoc($result)) {
-            $imageFile = $row['result_card '];
+            $imageFile = $row['result_card'];
             
             // Delete the record from database
             $deleteQuery = "DELETE FROM students WHERE id = ?";
@@ -52,7 +52,16 @@ if (isset($_GET['id'])) {
                         }
                     }
                 }
+
+                // Reorder IDs to remove gaps
+                $reorderQuery = "SET @count = 0; 
+                                UPDATE students SET id = @count := @count + 1;
+                                ALTER TABLE students AUTO_INCREMENT = 1;";
                 
+                if (!mysqli_multi_query($conn, $reorderQuery)) {
+                    throw new Exception("Failed to reorder IDs: " . mysqli_error($conn));
+                }
+
                 // Commit transaction
                 mysqli_commit($conn);
                 

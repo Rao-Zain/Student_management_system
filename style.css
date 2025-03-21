@@ -10,3 +10,11 @@
     margin-top: 20px;
     align-items: center;
 }
+.manage a{
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    transition: background-color 0.5s;
+}

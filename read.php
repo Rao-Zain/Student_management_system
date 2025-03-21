@@ -47,32 +47,39 @@ $result = $conn->query($sql);
         </thead>
         <tbody>
         <?php
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                echo "<tr>
-                        <td>" . $row['id'] . "</td>
-                        <td>" . $row['name'] . "</td>
-                        <td>" . $row['father_name'] . "</td>
-                        <td>" . $row['roll_no'] . "</td>
-                        <td>" . $row['last_qualification'] . "</td>
-                        <td>" . $row['marks'] . "</td>
-                        <td>" . $row['programme'] . "</td>
-                        <td>" . $row['email'] . "</td>
-                        <td>" . $row['phone'] . "</td>
-                        <td>" . $row['address'] . "</td>
-                        <td>" . $row['gender'] . "</td>
-                        <td>" . $row['course'] . "</td>
-                        <td><a href='uploads/" . $row['result_card'] . "' target='_blank'>View</a></td>
-                        <td>
-                            <a class='btn btn-success btn-sm' href='update.php?id=" . $row['id'] . "'>Edit</a>
-                            <a class='btn btn-danger btn-sm' href='delete.php?id=" . $row['id'] . "'>Delete</a>
-                        </td>
-                      </tr>";
-            }
-        } else {
-            echo "<tr><td colspan='14' class='text-center'>No Records Found</td></tr>";
-        }
-        ?>
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        echo "<tr>
+                <td>" . $row['id'] . "</td>
+                <td>" . $row['name'] . "</td>
+                <td>" . $row['father_name'] . "</td>
+                <td>" . $row['roll_no'] . "</td>
+                <td>" . $row['last_qualification'] . "</td>
+                <td>" . $row['marks'] . "</td>
+                <td>" . $row['programme'] . "</td>
+                <td>" . $row['email'] . "</td>
+                <td>" . $row['phone'] . "</td>
+                <td>" . $row['address'] . "</td>
+                <td>" . $row['gender'] . "</td>
+                <td>" . $row['course'] . "</td>
+                <td>";
+                if (!empty($row['result_card']) && file_exists($row['result_card'])) {
+                    echo "<img src='" . $row['result_card'] . "' alt='Result Card' width='80' height='80'>";
+                } else {
+                    echo "<img src='uploads/no_image.jpeg' alt='No Image' width='80' height='80'>";
+                }
+                echo "</td>
+                <td>
+                    <a class='btn btn-success btn-sm' href='update.php?id=" . $row['id'] . "'>Edit</a>
+                    <a class='btn btn-danger btn-sm' href='delete.php?id=" . $row['id'] . "'>Delete</a>
+                </td>
+              </tr>";
+    }
+} else {
+    echo "<tr><td colspan='14' class='text-center'>No Records Found</td></tr>";
+}
+?>
+
         </tbody>
     </table>
 </div>

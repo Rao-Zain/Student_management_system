@@ -26,19 +26,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
+            $_SESSION['user_role'] = $user['role'];
             $_SESSION['username'] = $user['username'];
-            header('Location: ../index.php');
+          
+            // Redirect based on user role
+            if ($user['role'] === 'admin') {
+                header('Location: ../index.php');
+            } elseif ($user['role'] === 'Teacher') {
+                header('Location: ../teachers/teacher_dashboard.php');
+            } elseif ($user['role'] === 'student') {
+                header('Location: ../index.php');
+            }
+            
             exit();
         } else {
             header('Location: login.php?error=Invalid password.');
             exit();
         }
     } else {
-        header('Location: login.php?error=Your email is not verified or account doesnot exist.');
+        header('Location: login.php?error=Your email is not verified or account does not exist.');
         exit();
     }
 }
 
 header('Location: login.php?error=Invalid request.');
 exit();
-?>
