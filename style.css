@@ -10,11 +10,10 @@
     margin-top: 20px;
     align-items: center;
 }
-.manage a{
-    color: white;
-    text-decoration: none;
-    margin: 0 10px;
-    padding: 6px 12px;
-    border-radius: 5px;
-    transition: background-color 0.5s;
+.card_hover {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.card_hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }

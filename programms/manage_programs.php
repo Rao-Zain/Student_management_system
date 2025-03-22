@@ -1,10 +1,7 @@
 <?php
+session_start();
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header('Location: ../auth/login.php');
     exit();
 }
@@ -13,7 +10,7 @@ include '../config/connection.php';
 
 if (isset($_POST['add_program'])) {
     $program_name = $_POST['program_name'];
-    
+
     $stmt = $conn->prepare("INSERT INTO programs (program_name) VALUES (?)");
     $stmt->bind_param("s", $program_name);
     $stmt->execute();
@@ -24,12 +21,18 @@ if (isset($_POST['add_program'])) {
 
 $programs = $conn->query("SELECT * FROM programs");
 
-//delete program
+
+// Delete Program
 if (isset($_GET['delete_programs'])) {
     $id = intval($_GET['delete_programs']);
 
     try {
         mysqli_begin_transaction($conn);
+
+        // Delete related courses in courses table FIRST
+        $deleteCoursesStmt = $conn->prepare("DELETE FROM courses WHERE program_id = ?");
+        $deleteCoursesStmt->bind_param("i", $id);
+        $deleteCoursesStmt->execute();
 
         $stmt = $conn->prepare("DELETE FROM programs WHERE id = ?");
         $stmt->bind_param("i", $id);
@@ -45,28 +48,29 @@ if (isset($_GET['delete_programs'])) {
                 } while (mysqli_more_results($conn) && mysqli_next_result($conn));
 
                 mysqli_commit($conn);
-
                 header("Location: manage_programs.php");
                 exit();
             } else {
                 throw new Exception("Failed to reorder IDs: " . mysqli_error($conn));
             }
         } else {
-            throw new Exception("Failed to delete course: " . mysqli_error($conn));
+            throw new Exception("Failed to delete program: " . mysqli_error($conn));
         }
     } catch (Exception $e) {
         mysqli_rollback($conn);
         echo "Error: " . $e->getMessage();
     } finally {
-        $stmt->close();
-        $conn->close();
+        // Remove $stmt->close() and $conn->close() from here
+        // The connection will be closed at the end of the script
     }
 }
 
-// $courses = $conn->query("SELECT courses.*, programs.program_name FROM courses JOIN programs ON courses.program_id = programs.id");
 $programs = $conn->query("SELECT * FROM programs");
-?>
 
+// ... (your HTML and other code) ...
+
+// Close the connection at the end of the script
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -79,20 +83,20 @@ $programs = $conn->query("SELECT * FROM programs");
 <body class="bg-gray-100">
 
 <div class="header">
-        <h1>Student Management System</h1>
-        <div class="nav-links">
+    <h1>Student Management System</h1>
+    <div class="nav-links">
         <?php if (isset($_SESSION['user_id'])): ?>
-    <a href="../index.php">Dashboard</a>
-    <a href="../read.php">All Students</a>
-    <a href="../create.php">Add New Student</a>
-    <a href="../auth/logout.php">Logout (<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>)</a>
-<?php else: ?>
-    <a href="../auth/login.php">Login</a>
-    <a href="../auth/register.php">Register</a>
-<?php endif; ?>
-
-        </div>
+            <a href="../index.php">Dashboard</a>
+            <a href="../read.php">All Students</a>
+            <a href="../create.php">Add New Student</a>
+            <a href="manage_courses.php">Add New Course</a>
+            <a href="../auth/logout.php">Logout (<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>)</a>
+        <?php else: ?>
+            <a href="../auth/login.php">Login</a>
+            <a href="../auth/register.php">Register</a>
+        <?php endif; ?>
     </div>
+</div>
 
 <div class="container mx-auto p-8">
     <div class="bg-white shadow-md rounded p-6 mb-6">

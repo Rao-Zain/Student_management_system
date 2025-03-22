@@ -140,8 +140,19 @@ $teacher_sbuject = "CREATE TABLE IF NOT EXISTS `teacher_subjects` (
 //     echo "Error: ".$conn ->error;	
 // }
 
+$student_courses = "CREATE TABLE student_courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+)";
 
-
-
+// if($conn->query($student_courses)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// }
 
 ?>

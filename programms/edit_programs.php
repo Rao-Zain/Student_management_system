@@ -2,7 +2,7 @@
 session_start();
 include '../config/connection.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header('Location: ../auth/login.php');
     exit();
 }

@@ -1,14 +1,15 @@
 <?php
 require_once '../config/connection.php';
+
 session_start();
 
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header("Location: ../auth/login.php");
     exit();
 }
-
-// Fetch all teachers
-$teacher_query = "SELECT id, username FROM users WHERE role = 'Teacher'";
+include 'header.php';
+// Fetch all teachers from both 'users' and 'teachers' tables
+$teacher_query = "SELECT id, username FROM users WHERE role = 'Teacher' UNION SELECT id, name as username FROM teachers";
 $teacher_result = $conn->query($teacher_query);
 $teachers = [];
 while ($row = $teacher_result->fetch_assoc()) {
@@ -28,20 +29,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $teacher_id = $_POST['teacher_id'];
     $course_id = $_POST['course_id'];
 
-    $stmt = $conn->prepare("INSERT INTO teacher_subjects (teacher_id, course_id) VALUES (?, ?)");
-    
-    if ($stmt) {
-        $stmt->bind_param("ii", $teacher_id, $course_id);
-
-        if ($stmt->execute()) {
-            $success_message = "Subject assigned successfully!";
-        } else {
-            $error_message = "Error assigning subject: " . $stmt->error;
-        }
-
-        $stmt->close();
+    if ($teacher_id === "select" || $course_id === "select") {
+        $error_message = "Please select a valid teacher and course.";
     } else {
-        $error_message = "Error preparing statement: " . $conn->error;
+        $check_query = "SELECT * FROM teacher_subjects WHERE teacher_id = ? AND course_id = ?";
+        $check_stmt = $conn->prepare($check_query);
+        $check_stmt->bind_param("ii", $teacher_id, $course_id);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $error_message = "This subject is already assigned to the selected teacher.";
+        } else {
+            $stmt = $conn->prepare("INSERT INTO teacher_subjects (teacher_id, course_id) VALUES (?, ?)");
+            if ($stmt) {
+                $stmt->bind_param("ii", $teacher_id, $course_id);
+                if ($stmt->execute()) {
+                    $success_message = "Subject assigned successfully!";
+                } else {
+                    $error_message = "Error assigning subject: " . $stmt->error;
+                }
+                $stmt->close();
+            } else {
+                $error_message = "Error preparing statement: " . $conn->error;
+            }
+        }
+        $check_stmt->close();
     }
 }
 ?>
@@ -54,14 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Assign Subjects to Teachers</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
 </head>
-<body>
-    <div class="container mx-auto mt-5 p-5 bg-white rounded shadow-lg">
-        <h1 class="text-2xl font-bold mb-5">Assign Subjects to Teachers</h1>
-        
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h1 class="text-2xl font-bold mb-5 text-center">Assign Subjects to Teachers</h1>
+
         <?php if (isset($success_message)): ?>
-            <p class="text-green-500 mb-3"><?php echo $success_message; ?></p>
+            <p class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert"><?php echo $success_message; ?></p>
         <?php elseif (isset($error_message)): ?>
-            <p class="text-red-500 mb-3"><?php echo $error_message; ?></p>
+            <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert"><?php echo $error_message; ?></p>
         <?php endif; ?>
 
         <form action="" method="POST" class="space-y-4">
@@ -85,11 +98,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
 
-            <div>
-                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded">Assign Subject</button>
-            </div>
-            <div>
-                <a href="teacher_dashboard.php" class="bg-blue-500 text-white py-2 px-4  rounded">Go To Dashboard</a>
+            <div class="flex flex-col space-y-2">
+                <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded">Assign Subject</button>
+                <a href="view_teacher.php" class="bg-yellow-500 text-white py-2 px-4 rounded">View Teachers</a>
+                <a href="teacher_dashboard.php" class="bg-blue-500 text-white py-2 px-4 rounded">To Dashboard</a>
             </div>
         </form>
     </div>

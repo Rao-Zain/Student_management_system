@@ -2,7 +2,7 @@
 session_start();
 include '../config/connection.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     header('Location: ../auth/login.php');
     exit();
 }
@@ -15,6 +15,7 @@ if (isset($_POST['add_course'])) {
     $stmt = $conn->prepare("INSERT INTO courses (course_name, program_id) VALUES (?, ?)");
     $stmt->bind_param("si", $course_name, $program_id);
     $stmt->execute();
+
     header("Location: manage_courses.php");
     exit();
 }
@@ -28,9 +29,15 @@ if (isset($_POST['edit_course'])) {
     $stmt = $conn->prepare("UPDATE courses SET course_name = ?, program_id = ? WHERE id = ?");
     $stmt->bind_param("sii", $course_name, $program_id, $id);
     $stmt->execute();
+
     header("Location: manage_courses.php");
     exit();
 }
+
+// Delete Course
+
+
+// ... (your existing code for session check, add course, edit course) ...
 
 // Delete Course
 if (isset($_GET['delete_course'])) {
@@ -38,6 +45,11 @@ if (isset($_GET['delete_course'])) {
 
     try {
         mysqli_begin_transaction($conn);
+
+        // Delete related records in teacher_subjects FIRST
+        $deleteTeacherSubjectsStmt = $conn->prepare("DELETE FROM teacher_subjects WHERE course_id = ?");
+        $deleteTeacherSubjectsStmt->bind_param("i", $id);
+        $deleteTeacherSubjectsStmt->execute();
 
         $stmt = $conn->prepare("DELETE FROM courses WHERE id = ?");
         $stmt->bind_param("i", $id);
@@ -53,7 +65,6 @@ if (isset($_GET['delete_course'])) {
                 } while (mysqli_more_results($conn) && mysqli_next_result($conn));
 
                 mysqli_commit($conn);
-
                 header("Location: manage_courses.php");
                 exit();
             } else {
@@ -66,13 +77,15 @@ if (isset($_GET['delete_course'])) {
         mysqli_rollback($conn);
         echo "Error: " . $e->getMessage();
     } finally {
-        $stmt->close();
-        $conn->close();
+        // Remove $stmt->close() and $conn->close() from here
+        // The connection will be closed at the end of the script
     }
 }
 
 $courses = $conn->query("SELECT courses.*, programs.program_name FROM courses JOIN programs ON courses.program_id = programs.id");
 $programs = $conn->query("SELECT * FROM programs");
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -90,6 +103,7 @@ $programs = $conn->query("SELECT * FROM programs");
         <a href="../index.php">Dashboard</a>
         <a href="../read.php">All Students</a>
         <a href="../create.php">Add New Student</a>
+        <a href="manage_programs.php">Add New Program</a>
         <a href="../auth/logout.php">Logout</a>
     </div>
 </div>

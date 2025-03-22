@@ -66,37 +66,49 @@ $conn->close();
             <h2 class="text-xl font-bold mb-4">Female Students</h2>
             <p class="text-3xl"><?php echo $female_students; ?></p>
         </div>
-        <div class="bg-white shadow-lg rounded-lg p-6">  
-          <h2 class="text-xl font-bold mb-4 manage"> 
-              <a href="teachers/teacher_dashboard.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Teacher's Dashboard</a></h2>
-         </div>
-        <div class="bg-white shadow-lg rounded-lg p-6">  
-          <h2 class="text-xl font-bold mb-4 manage"> 
-              <a href="teachers/assign_subjects.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Assign a Subject</a></h2>
-         </div>
-        <div class="bg-white shadow-lg rounded-lg p-6">  
-          <h2 class="text-xl font-bold mb-4 manage"> 
-              <a href="attendance/attendance.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Mark Attendance</a></h2>
-         </div>
+
+        <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">Teacher's Dashboard</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Teachers Activities.</p>
+              <a href="teachers/teacher_dashboard.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
+        </div>
+        <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">Assign a Subject</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Teachers Activities.</p>
+              <a href="teachers/assign_subjects.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
+        </div>
+        <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">Mark Attendance</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Teachers Activities.</p>
+              <a href="attendance/attendance.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
+        </div>
+        <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">View Attendance</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Teachers Activities.</p>
+              <a href="attendance/view.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
+        </div>
+
        
-        <div class="bg-white shadow-lg rounded-lg p-6">  
-          <h2 class="text-xl font-bold mb-4 manage"> 
-              <a href="attendance/view.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">View Attendance</a></h2>
-         </div>
     <?php    
       //session_start();
 if (isset($_SESSION['user_id']) && $_SESSION['user_role'] === 'admin') {
     
     echo '
 
-        <div class="bg-white shadow-lg rounded-lg p-6">  
-          <h2 class="text-xl font-bold mb-4 manage">   <a href="programms/manage_programs.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm"">Manage Programs</a></h2>
-         </div>
-         <div class="bg-white shadow-lg rounded-lg p-6">
-             <h2 class="text-xl font-bold mb-4 manage"> <a href="programms/manage_courses.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Manage Courses</a></h2>
+     <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">Manage Programs</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Teachers Activities.</p>
+              <a href="programms/manage_programs.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
         </div>
-        <div class="bg-white shadow-lg rounded-lg p-6">
-          <h2 class="text-xl font-bold mb-4 manage">   <a href="manage_users.php" class="text-indigo-600 hover:text-indigo-800 shadow-sm">Manage Users</a></h2>
+     <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">Manage Courses</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Teachers Activities.</p>
+              <a href="programms/manage_courses.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
+        </div>
+     <div class="card bg-white rounded-2xl shadow-lg p-6 text-center transition-transform transform-gpu hover:scale-105 hover:shadow-2xl hover:bg-blue-10 transition-colors duration-300">
+            <h2 class="text-xl font-bold mb-2">Manage Users</h2>
+            <p class="text-gray-600 mb-4">Easily Manage Users Activities.</p>
+              <a href="manage_users.php" class="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">Go</a>
         </div>';
 }
     ?>

@@ -1,9 +1,7 @@
 <?php
 error_reporting(0); // Turn off all error reporting
 ini_set('display_errors', 0); // Don't display errors on the page
-?>
 
-<?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
     header("Location: auth/login.php");
@@ -12,11 +10,17 @@ if (!isset($_SESSION['user_id'])) {
 
 include '../config/connection.php';
 
+// Fetch subjects from the courses table
+$subjects = $conn->query("SELECT course_name FROM courses");
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject = $_POST['subject'];
     $date = $_POST['date'];
 
-    $sql = "SELECT * FROM attendance WHERE subject = '$subject' AND date = '$date'";
+    $sql = "SELECT a.*, s.name, s.roll_no 
+            FROM attendance a
+            JOIN students s ON a.student_id = s.id
+            WHERE a.subject = '$subject' AND a.date = '$date'";
     $attendance = $conn->query($sql);
 
     if (!$attendance) {
@@ -35,57 +39,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <div class="header">
-        <h1>Student Management System</h1>
-        <div class="nav-links">
+    <h1>Student Management System</h1>
+    <div class="nav-links">
         <?php if (isset($_SESSION['user_id'])): ?>
-    <a href="../index.php">Dashboard</a>
-    <a href="../read.php">All Students</a>
-    <a href="../create.php">Add New Student</a>
-    <a href="attendance.php">Mark Attendance</a>
-    <a href="../auth/logout.php">Logout (<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>)</a>
-<?php else: ?>
-    <a href="../auth/login.php">Login</a>
-    <a href="../auth/register.php">Register</a>
-<?php endif; ?>
-
-        </div>
+            <a href="../index.php">Dashboard</a>
+            <a href="../read.php">All Students</a>
+            <a href="../create.php">Add New Student</a>
+            <a href="attendance.php">Mark Attendance</a>
+            <a href="../auth/logout.php">Logout (<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>)</a>
+        <?php else: ?>
+            <a href="../auth/login.php">Login</a>
+            <a href="../auth/register.php">Register</a>
+        <?php endif; ?>
     </div>
+</div>
 
-    <div class="container">
-        <h2>View Attendance</h2>
+<div class="container">
+    <h2>View Attendance</h2>
     <form method="POST">
         <label>Subject:</label>
-        <input type="text" name="subject" required><br><br>
+        <select name="subject" required>
+            <?php while ($row = $subjects->fetch_assoc()) { ?>
+                <option value="<?php echo $row['course_name']; ?>"><?php echo $row['course_name']; ?></option>
+            <?php } ?>
+        </select><br><br>
 
         <label>Date:</label>
         <input type="date" name="date" required><br><br>
 
         <button type="submit">View Attendance</button>
-        <h2>
-</h2>
+        <h2></h2>
     </form>
 
     <?php if (isset($attendance)) { ?>
-    <table border="1">
-        <tr>
-            <th>Student ID</th>
-            <th>Subject</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-        <?php while ($row = $attendance->fetch_assoc()) { ?>
-        <tr>
-            <td><?php echo $row['student_id']; ?></td>
-            <td><?php echo $row['subject']; ?></td>
-            <td><?php echo $row['date']; ?></td>
-            <td><?php echo $row['status']; ?></td>
-            <td>        <a href="attendance_report.php?student_id=<?php echo $row['student_id']; ?>" class="btn btn-primary">View Report</a>
-            </td>
-        </tr>
-        <?php } ?>
-    </table>
+        <table border="1">
+            <tr>
+                <th>Student ID</th>
+                <th>Roll Number</th>
+                <th>Student Name</th>
+                <th>Subject</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            <?php while ($row = $attendance->fetch_assoc()) { ?>
+                <tr>
+                    <td><?php echo $row['student_id']; ?></td>
+                    <td><?php echo $row['roll_no']; ?></td>
+                    <td><?php echo $row['name']; ?></td>
+                    <td><?php echo $row['subject']; ?></td>
+                    <td><?php echo $row['date']; ?></td>
+                    <td><?php echo $row['status']; ?></td>
+                    <td>
+                        <a href="attendance_report.php?student_id=<?php echo $row['student_id']; ?>" class="btn btn-primary">View Report</a>
+                    </td>
+                </tr>
+            <?php } ?>
+        </table>
     <?php } ?>
-    </div>
+</div>
 </body>
 </html>
