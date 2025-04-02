@@ -4,92 +4,61 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: auth/login.php");
     exit();
 }
-?>
-<?php
-include 'config/connection.php'; // Your database connection file
-include "includes/header.php";
+
+include 'config/connection.php';
 
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
     
     try {
         // Start transaction
-        mysqli_begin_transaction($conn);
+        $conn->begin_transaction();
         
-        // Get the image filename before deletion
-        $query = "SELECT result_card FROM students WHERE id = ?";
-        $stmt = mysqli_prepare($conn, $query);
+        // Fetch student data
+        $stmt = $conn->prepare("SELECT result_card FROM students WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
         
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . mysqli_error($conn));
-        }
-        
-        mysqli_stmt_bind_param($stmt, "i", $id);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        
-        if ($row = mysqli_fetch_assoc($result)) {
-            $imageFile = $row['result_card'];
-            
-            // Delete the record from database
-            $deleteQuery = "DELETE FROM students WHERE id = ?";
-            $deleteStmt = mysqli_prepare($conn, $deleteQuery);
-            
-            if (!$deleteStmt) {
-                throw new Exception("Prepare delete failed: " . mysqli_error($conn));
+        if ($row) {
+            // Delete the result card file if it exists
+            if (!empty($row['result_card']) && file_exists($row['result_card'])) {
+                unlink($row['result_card']);
             }
             
-            mysqli_stmt_bind_param($deleteStmt, "i", $id);
-            $deleteSuccess = mysqli_stmt_execute($deleteStmt);
+            // Delete related attendance records first
+            $stmt = $conn->prepare("DELETE FROM attendance WHERE student_id = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
             
-            if ($deleteSuccess) {
-                // Delete the image file if it exists
-                if (!empty($imageFile)) {
-                    $filePath = "uploads/" . $imageFile;
-                    if (file_exists($filePath)) {
-                        if (!unlink($filePath)) {
-                            throw new Exception("Failed to delete image file");
-                        }
-                    }
-                }
-
-                // Reorder IDs to remove gaps
-                $reorderQuery = "SET @count = 0; 
-                                UPDATE students SET id = @count := @count + 1;
-                                ALTER TABLE students AUTO_INCREMENT = 1;";
-                
-                if (!mysqli_multi_query($conn, $reorderQuery)) {
-                    throw new Exception("Failed to reorder IDs: " . mysqli_error($conn));
-                }
-
-                // Commit transaction
-                mysqli_commit($conn);
-                
-                // Redirect on success
-                header("Location: read.php");
-                exit();
+            // Delete student record
+            $stmt = $conn->prepare("DELETE FROM students WHERE id = ?");
+            $stmt->bind_param("i", $id);
+            if ($stmt->execute()) {
+                $conn->commit();
+                $_SESSION['success'] = "Student deleted successfully.";
             } else {
-                throw new Exception("Delete failed: " . mysqli_error($conn));
+                throw new Exception("Error deleting student.");
             }
         } else {
-            throw new Exception("Record not found");
+            throw new Exception("Student not found.");
         }
-        
     } catch (Exception $e) {
-        // Rollback transaction on error
-        mysqli_rollback($conn);
-        echo "Error: " . $e->getMessage();
-    } finally {
-        // Clean up
-        if (isset($stmt)) {
-            mysqli_stmt_close($stmt);
-        }
-        if (isset($deleteStmt)) {
-            mysqli_stmt_close($deleteStmt);
-        }
-        mysqli_close($conn);
+        $conn->rollback();
+        $_SESSION['error'] = $e->getMessage();
     }
 } else {
-    echo "Invalid Request!";
+    $_SESSION['error'] = "Invalid request.";
 }
+  // Reorder IDs to remove gaps
+  $reorderQuery = "SET @count = 0; 
+  UPDATE students SET id = @count := @count + 1;
+  ALTER TABLE students AUTO_INCREMENT = 1;";
+
+if (!mysqli_multi_query($conn, $reorderQuery)) {
+throw new Exception("Failed to reorder IDs: " . mysqli_error($conn));
+}
+header("Location: read.php");
+exit();
 ?>

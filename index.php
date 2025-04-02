@@ -17,11 +17,15 @@ $male_students = $conn->query("SELECT COUNT(*) as count FROM students WHERE gend
 
 $female_students = $conn->query("SELECT COUNT(*) as count FROM students WHERE gender = 'Female'")->fetch_assoc()['count'];
 
-$course_data = $conn->query("SELECT course, COUNT(*) as count FROM students GROUP BY course");
+$course_data = $conn->query("SELECT sc.course_id, c.course_name, COUNT(*) as count 
+                              FROM student_courses sc
+                              JOIN courses c ON sc.course_id = c.id
+                              GROUP BY sc.course_id");
+
 $courses = [];
 $course_counts = [];
 while ($row = $course_data->fetch_assoc()) {
-    $courses[] = $row['course'];
+    $courses[] = $row['course_name']; // Use course_name instead of course_id
     $course_counts[] = (int)$row['count'];
 }
 

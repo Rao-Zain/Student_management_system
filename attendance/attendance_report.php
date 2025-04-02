@@ -7,23 +7,19 @@ if (!isset($_SESSION['user_id'])) {
 
 include '../config/connection.php';
 
-
-// Check if student_id is passed in URL
 if (isset($_GET['student_id'])) {
     $student_id = $_GET['student_id'];
 
-    // Fetch student details
     $studentQuery = "SELECT * FROM students WHERE id = '$student_id'";
     $studentResult = $conn->query($studentQuery);
 
     if ($studentResult && $studentResult->num_rows > 0) {
         $student = $studentResult->fetch_assoc();
     } else {
-        echo "Student not found!";
+        echo "<div class='container mt-5'><div class='alert alert-danger'>Student not found!</div></div>";
         exit();
     }
 
-    // Fetch unique subjects for the student
     $subjectsQuery = "SELECT DISTINCT subject FROM attendance WHERE student_id = '$student_id'";
     $subjectsResult = $conn->query($subjectsQuery);
     $subjects = [];
@@ -34,7 +30,6 @@ if (isset($_GET['student_id'])) {
         }
     }
 
-    // Fetch all attendance records for the student
     $allAttendanceQuery = "SELECT * FROM attendance WHERE student_id = '$student_id' ORDER BY date DESC";
     $allAttendanceResult = $conn->query($allAttendanceQuery);
     $allAttendance = [];
@@ -45,7 +40,7 @@ if (isset($_GET['student_id'])) {
         }
     }
 } else {
-    echo "No student selected!";
+    echo "<div class='container mt-5'><div class='alert alert-danger'>No student selected!</div></div>";
     exit();
 }
 ?>
@@ -55,79 +50,84 @@ if (isset($_GET['student_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Report</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>Attendance Report | Student Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .low-attendance { color: red; }
-        .good-attendance { color: green; }
+        .low-attendance { color: #dc3545; font-weight: bold; }
+        .good-attendance { color: #28a745; font-weight: bold; }
+        .report-header { background: linear-gradient(135deg, #6a11cb, #2575fc); color: white; padding: 30px 20px; border-radius: 8px 8px 0 0; }
+        .report-header h2 { margin-bottom: 5px; }
+        .report-header p { margin-bottom: 0; }
+        .card { border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .card-body { padding: 25px; }
+        .card-footer { background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 20px; text-align: center; }
+        .btn-secondary { background-color: #6c757d; border-color: #6c757d; }
+        .btn-secondary:hover { background-color: #5a6268; border-color: #5a6268; }
+        .subject-section { margin-bottom: 20px; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; }
+        .subject-title { font-weight: bold; margin-bottom: 10px; }
+        .attendance-table { width: 100%; }
+        .attendance-table th, .attendance-table td { padding: 8px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .attendance-table thead th { background-color: #e9ecef; }
+        .attendance-table tbody tr:nth-child(even) { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h2>Attendance Report for <?php echo $student['name']; ?></h2>
-    <p><strong>Roll No:</strong> <?php echo $student['roll_no']; ?></p>
+<div class="container mt-4">
+    <div class="card">
+        <div class="report-header">
+            <h2 class="text-center"><i class="fas fa-chart-line me-2"></i> Attendance Report for <?php echo htmlspecialchars($student['name']); ?></h2>
+            <p class="text-center"><i class="fas fa-id-card me-2"></i> <strong>Roll No:</strong> <?php echo htmlspecialchars($student['roll_no']); ?></p>
+        </div>
+        <div class="card-body">
+            <?php if (!empty($subjects)): ?>
+                <?php foreach ($subjects as $subject): ?>
+                    <div class="subject-section">
+                        <h4 class="subject-title"><?php echo htmlspecialchars($subject); ?></h4>
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Percentage</th>
+                                    <th>Quality</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $subjectAttendance = array_filter($allAttendance, function($record) use ($subject) {
+                                    return $record['subject'] == $subject;
+                                });
 
-    <?php if (!empty($subjects)): ?>
-        <table class="table table-bordered table-striped mt-4">
-            <thead>
-                <tr>
-                    <?php foreach ($subjects as $subject): ?>
-                        <th colspan="4"><?php echo $subject; ?></th>
-                    <?php endforeach; ?>
-                </tr>
-                <tr>
-                    <?php foreach ($subjects as $subject): ?>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Percentage</th>
-                        <th>Quality</th>
-                    <?php endforeach; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $maxLectures = 32;
-                $attendanceBySubject = [];
+                                $totalLectures = count($subjectAttendance);
+                                $presentLectures = count(array_filter($subjectAttendance, function($r) { return $r['status'] == 'Present' || $r['status'] == 'Late'; }));
+                                $percentage = ($totalLectures > 0) ? ($presentLectures / 32) * 100 : 0;
+                                $quality = ($percentage >= 75) ? 'Good' : 'Low';
+                                $qualityClass = ($percentage >= 75) ? 'good-attendance' : 'low-attendance';
 
-                foreach ($allAttendance as $record) {
-                    $attendanceBySubject[$record['subject']][] = $record;
-                }
-
-                $maxRows = 0;
-                foreach ($attendanceBySubject as $subjectAttendance) {
-                    $maxRows = max($maxRows, count($subjectAttendance));
-                }
-
-                for ($i = 0; $i < $maxRows; $i++) {
-                    echo "<tr>";
-                    foreach ($subjects as $subject) {
-                        if (isset($attendanceBySubject[$subject][$i])) {
-                            $record = $attendanceBySubject[$subject][$i];
-                            $totalLectures = count($attendanceBySubject[$subject]);
-                            $presentLectures = count(array_filter($attendanceBySubject[$subject], function($r) { return $r['status'] == 'Present' || $r['status'] == 'Late'; }));
-                            $percentage = ($totalLectures > 0) ? ($presentLectures / $maxLectures) * 100 : 0;
-                            $quality = ($percentage >= 75) ? 'Good' : 'Low';
-                            $qualityClass = ($percentage >= 75) ? 'good-attendance' : 'low-attendance';
-
-                            echo "<td>" . $record['date'] . "</td>";
-                            echo "<td>" . $record['status'] . "</td>";
-                            echo "<td>" . round($percentage, 2) . "%</td>";
-                            echo "<td class='" . $qualityClass . "'>" . $quality . "</td>";
-                        } else {
-                            echo "<td colspan='4'></td>";
-                        }
-                    }
-                    echo "</tr>";
-                }
-                ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <div class="alert alert-warning">No attendance records found for this student.</div>
-    <?php endif; ?>
-
-    <a href="../index.php" class="btn btn-primary mt-3">Back to Dashboard</a>
+                                foreach ($subjectAttendance as $record):
+                                ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($record['date']); ?></td>
+                                        <td><?php echo htmlspecialchars($record['status']); ?></td>
+                                        <td><?php echo round($percentage, 2); ?>%</td>
+                                        <td class="<?php echo $qualityClass; ?>"><?php echo htmlspecialchars($quality); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="alert alert-warning">No attendance records found for this student.</div>
+            <?php endif; ?>
+        </div>
+        <div class="card-footer">
+            <a href="../index.php" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
 </div>
 </body>
 </html>

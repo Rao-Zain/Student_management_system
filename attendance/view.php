@@ -1,6 +1,6 @@
 <?php
-error_reporting(0); // Turn off all error reporting
-ini_set('display_errors', 0); // Don't display errors on the page
+error_reporting(0);
+ini_set('display_errors', 0);
 
 session_start();
 if (!isset($_SESSION['user_id'])) {
@@ -10,21 +10,39 @@ if (!isset($_SESSION['user_id'])) {
 
 include '../config/connection.php';
 
-// Fetch subjects from the courses table
-$subjects = $conn->query("SELECT course_name FROM courses");
+$programs = $conn->query("SELECT id, program_name FROM programs");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $program_id = $_POST['program'];
     $subject = $_POST['subject'];
-    $date = $_POST['date'];
+    $dateFilter = $_POST['date_filter'];
+    $nameFilter = $_POST['name_filter'];
+    $rollFilter = $_POST['roll_filter'];
 
     $sql = "SELECT a.*, s.name, s.roll_no 
             FROM attendance a
             JOIN students s ON a.student_id = s.id
-            WHERE a.subject = '$subject' AND a.date = '$date'";
+            JOIN student_courses sc ON a.student_id = sc.student_id
+            JOIN courses c ON sc.course_id = c.id
+            JOIN programs p ON c.program_id = p.id
+            WHERE p.id = '$program_id' AND a.subject = '$subject'";
+
+    if (!empty($dateFilter)) {
+        $sql .= " AND a.date = '$dateFilter'";
+    }
+
+    if (!empty($nameFilter)) {
+        $sql .= " AND s.name LIKE '%$nameFilter%'";
+    }
+
+    if (!empty($rollFilter)) {
+        $sql .= " AND s.roll_no LIKE '%$rollFilter%'";
+    }
+
     $attendance = $conn->query($sql);
 
     if (!$attendance) {
-        die("Query Failed: " . $conn->error);  // This will show the exact error
+        die("Query Failed: " . $conn->error);
     }
 }
 ?>
@@ -33,8 +51,96 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>View Attendance</title>
-    <link rel="stylesheet" href="attendance_style.css">
+        <link rel="stylesheet" href="attendance_style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+        }
+      
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            color: #333;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+            display: inline-block;
+            width: 150px;
+        }
+        .filter-input {
+            width: 200px;
+            padding: 8px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+        .filter-input:focus {
+            border-color: #6a11cb;
+            outline: none;
+        }
+        select.filter-input {
+            appearance: none;
+            -webkit-appearance: none;
+            background: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%236a11cb" d="M7.25 11.438L3.75 7.938l1.438-1.438L8 9.562l2.813-2.813 1.438 1.438z"/></svg>') no-repeat right 10px center;
+            background-size: 12px;
+        }
+        button[type="submit"] {
+            background-color: #6a11cb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button[type="submit"]:hover {
+            background-color:rgb(75, 13, 168);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+        table th {
+            background-color: #5a0ecb;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        table td {
+            font-size: 0.9rem;
+        }
+        .btnn-primary {
+            background-color: #5a0ecb;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btnn-primary:hover {
+            background-color:rgb(57, 7, 133);
+            color: #ffff
+        }
+    </style>
 </head>
 <body>
 
@@ -57,18 +163,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="container">
     <h2>View Attendance</h2>
     <form method="POST">
-        <label>Subject:</label>
-        <select name="subject" required>
-            <?php while ($row = $subjects->fetch_assoc()) { ?>
-                <option value="<?php echo $row['course_name']; ?>"><?php echo $row['course_name']; ?></option>
-            <?php } ?>
-        </select><br><br>
+        <div class="row">
+            <div class="col-md-6">
 
-        <label>Date:</label>
-        <input type="date" name="date" required><br><br>
-
+           
+        <div style="margin-bottom: 15px;">
+            <label>Program:</label>
+            <select name="program" class="filter-input" onchange="fetchSubjects(this.value)">
+                <option value="">Select Program</option>
+                <?php while ($row = $programs->fetch_assoc()) { ?>
+                    <option value="<?php echo $row['id']; ?>"><?php echo $row['program_name']; ?></option>
+                <?php } ?>
+            </select>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Subject:</label>
+            <select class="filter-input" name="subject" id="subject-select">
+                <option value="">Select Subject</option>
+            </select>
+        </div>
+        </div>
+        <div class="col-md-6">
+        <div style="margin-bottom: 15px;">
+            <label>Date Filter:</label>
+            <input type="date" name="date_filter" class="filter-input">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Name Filter:</label>
+            <input type="text" name="name_filter" placeholder="Filter by Name" class="filter-input">
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Roll Number Filter:</label>
+            <input type="text" name="roll_filter" placeholder="Filter by Roll Number" class="filter-input">
+        </div>
+        </div>
+        </div>
         <button type="submit">View Attendance</button>
-        <h2></h2>
     </form>
 
     <?php if (isset($attendance)) { ?>
@@ -91,12 +221,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <td><?php echo $row['date']; ?></td>
                     <td><?php echo $row['status']; ?></td>
                     <td>
-                        <a href="attendance_report.php?student_id=<?php echo $row['student_id']; ?>" class="btn btn-primary">View Report</a>
+                        <a href="attendance_report.php?student_id=<?php echo $row['student_id']; ?>" class="btn btnn-primary">View Report</a>
                     </td>
                 </tr>
             <?php } ?>
         </table>
     <?php } ?>
 </div>
+
+<script>
+function fetchSubjects(programId) {
+    if (!programId) {
+        console.error("Program ID is not set!");
+        return;
+    }
+
+    fetch('fetch_subjects.php?program_id=' + programId)
+        .then(response => response.json())
+        .then(data => {
+            let subjectSelect = document.getElementById('subject-select');
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+
+            if (data.error) {
+                console.error(data.error); // Log the error
+                alert(data.error); // Notify the user
+            } else {
+                data.forEach(subject => {
+                    let option = document.createElement('option');
+                    option.value = subject.course_name;
+                    option.textContent = subject.course_name;
+                    subjectSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error fetching subjects:', error));
+}
+</script>
 </body>
 </html>
