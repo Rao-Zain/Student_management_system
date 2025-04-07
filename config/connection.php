@@ -49,7 +49,7 @@ $sql = " CREATE TABLE if not EXISTS students(
      roll_no VARCHAR(255) NOT NULL,
      password varchar(255) not null,
      last_qualification varchar(255) not null,
-     programme varchar(255) not null,
+     
      gender varchar(255) not null,
      address varchar(255) not null,
         result_card varchar(255) not null

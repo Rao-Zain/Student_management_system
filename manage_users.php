@@ -24,13 +24,13 @@ $result = $stmt->get_result();
     <title>Manage Users</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
+<body >
     <div class="container mx-auto mt-10">
         <h1 class="text-3xl font-bold mb-6">Manage Users</h1>
         <div class="overflow-x-auto">
-            <table class="w-full table-auto bg-white shadow-md rounded-lg">
+            <table class="w-full table-auto shadow-md rounded-lg">
                 <thead>
-                    <tr class="bg-gray-200">
+                    <tr class="">
                         <th class="px-4 py-2">ID</th>
                         <th class="px-4 py-2">Username</th>
                         <th class="px-4 py-2">Email</th>

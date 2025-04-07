@@ -8,18 +8,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 include 'header.php';
-// Fetch all teachers along with their assigned subjects and subject IDs
+
+// Fetch all teachers from the 'users' table along with their assigned subjects and subject IDs
 $query = "
-    SELECT t.id, t.name AS teacher_name, c.course_name, c.id as course_id
-    FROM teachers t
-    LEFT JOIN teacher_subjects ts ON t.id = ts.teacher_id
-    LEFT JOIN courses c ON ts.course_id = c.id
-    UNION
-    SELECT u.id, u.username AS teacher_name, c.course_name, c.id as course_id
-    FROM users u
-    LEFT JOIN teacher_subjects ts ON u.id = ts.teacher_id
-    LEFT JOIN courses c ON ts.course_id = c.id
-    WHERE u.role = 'Teacher';
+   SELECT u.id, u.username AS teacher_name, c.course_name, c.id as course_id
+FROM users u
+LEFT JOIN teacher_subjects ts ON u.id = ts.teacher_id
+LEFT JOIN courses c ON ts.course_id = c.id
+WHERE u.role = 'Teacher'
 ";
 
 $result = $conn->query($query);
@@ -63,13 +59,45 @@ if (isset($_GET['remove_teacher_id']) && isset($_GET['remove_course_id'])) {
     $stmt->bind_param("ii", $removeTeacherId, $removeCourseId);
 
     if ($stmt->execute()) {
-        // Removal successful, redirect to refresh the page
         header("Location: view_teacher.php");
         exit();
     } else {
         echo "Error removing subject: " . $stmt->error;
     }
     $stmt->close();
+}
+
+// Handle teacher removal from the users table
+if (isset($_GET['delete_teacher_id'])) {
+    $deleteTeacherId = $_GET['delete_teacher_id'];
+
+    $conn->begin_transaction();
+
+    try {
+        // Delete the teacher from the teacher_subjects table
+        $deleteTeacherSubjectsQuery = "DELETE FROM teacher_subjects WHERE teacher_id = ?";
+        $stmt = $conn->prepare($deleteTeacherSubjectsQuery);
+        $stmt->bind_param("i", $deleteTeacherId);
+        $stmt->execute();
+
+        // Now delete the teacher from the users table
+        $deleteTeacherQuery = "DELETE FROM users WHERE id = ?";
+        $stmt = $conn->prepare($deleteTeacherQuery);
+        $stmt->bind_param("i", $deleteTeacherId);
+        $stmt->execute();
+
+        // Reorder user IDs to fill the gap (only users with role teacher)
+        $reorderQuery = "SET @count = 0; UPDATE users SET id = (@count := @count + 1) WHERE role = 'teacher' ORDER BY id";
+        $conn->query($reorderQuery);
+
+        $conn->commit();
+
+        header("Location: view_teacher.php");
+        exit();
+    } catch (Exception $e) {
+        $conn->rollback();
+        echo "Error deleting teacher: " . $e->getMessage();
+    }
 }
 ?>
 
@@ -106,10 +134,13 @@ if (isset($_GET['remove_teacher_id']) && isset($_GET['remove_course_id'])) {
                         </td>
                         <td class="border border-gray-300 p-2">
                             <?php foreach ($teacher['subjects'] as $subject): ?>
-                                <div class="mb-2">
+                                <div class="mb-2 mt-4">
                                     <a href="?remove_teacher_id=<?php echo $teacherId; ?>&remove_course_id=<?php echo $subject['id']; ?>" class="bg-red-500 text-white py-1 px-2 rounded text-xs">Remove</a>
                                 </div>
                             <?php endforeach; ?>
+                            <div class="mt-4">
+                                <a href="?delete_teacher_id=<?php echo $teacherId; ?>" class="bg-red-500 text-white py-1 px-2 rounded text-xs">Delete Teacher</a>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

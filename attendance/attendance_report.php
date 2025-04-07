@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 include '../config/connection.php';
-
+include 'attendance_header.php';
 if (isset($_GET['student_id'])) {
     $student_id = $_GET['student_id'];
 
@@ -123,8 +123,8 @@ if (isset($_GET['student_id'])) {
             <?php endif; ?>
         </div>
         <div class="card-footer">
-            <a href="../index.php" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            <a href="view.php" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Page
             </a>
         </div>
     </div>

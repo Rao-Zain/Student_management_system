@@ -9,25 +9,17 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] != 'admin') {
     exit();
 }
 
-// Fetch courses from the database
-$coursesQuery = "SELECT id, course_name FROM courses";
-$coursesResult = $conn->query($coursesQuery);
-$courses = [];
-
-if ($coursesResult->num_rows > 0) {
-    while ($row = $coursesResult->fetch_assoc()) {
-        $courses[] = $row;
-    }
-}
-
+// Check if the form has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get the data from the form
     $name = $_POST['name'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $courseId = $_POST['course_id']; // Changed to course_id
+    $department = $_POST['department']; // Department instead of subject
 
-    $stmt = $conn->prepare("INSERT INTO teachers (name, email, password, subject) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $name, $email, $password, $courseId); // modified to courseId
+    // Insert the teacher into the database
+    $stmt = $conn->prepare("INSERT INTO teachers (name, email, password, department) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $name, $email, $password, $department); // Use department instead of subject
 
     if ($stmt->execute()) {
         echo "<div class='bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative' role='alert'>
@@ -52,38 +44,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
 </head>
 <body class="bg-gray-100 ">
+
     <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6 mt-8">
         <h2 class="text-2xl font-bold mb-4 text-center">Add Teacher</h2>
+
+        <!-- Teacher Registration Form -->
         <form method="POST" class="space-y-4">
+            
+            <!-- Name Field -->
             <div>
                 <label class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
                 <input type="text" name="name" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
 
+            <!-- Email Field -->
             <div>
                 <label class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
                 <input type="email" name="email" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
 
+            <!-- Password Field -->
             <div>
                 <label class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
                 <input type="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
 
+            <!-- Department Field (Instead of Subject) -->
             <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Subject:</label>
-                <select name="course_id" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                <option value="select">Select a Sbuject</option>    
-                <?php foreach ($courses as $course): ?>
-                        <option value="<?php echo $course['id']; ?>"><?php echo $course['course_name']; ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Department:</label>
+                <input type="text" name="department" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
 
+            <!-- Submit Button -->
             <div class="text-center">
                 <input type="submit" value="Add Teacher" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
             </div>
         </form>
     </div>
+
 </body>
 </html>

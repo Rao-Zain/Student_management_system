@@ -8,9 +8,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 include 'header.php';
-// Fetch all teachers from both 'users' and 'teachers' tables
-$teacher_query = "SELECT id, username FROM users WHERE role = 'Teacher' UNION SELECT id, name as username FROM teachers";
-$teacher_result = $conn->query($teacher_query);
+
+// Fetch all teachers from the 'users' table, filtering by role
+$query = "SELECT id, username FROM users WHERE role = 'Teacher'";
+$teacher_result = $conn->query($query);
 $teachers = [];
 while ($row = $teacher_result->fetch_assoc()) {
     $teachers[] = $row;
@@ -32,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($teacher_id === "select" || $course_id === "select") {
         $error_message = "Please select a valid teacher and course.";
     } else {
+        // Check if the subject is already assigned to the teacher
         $check_query = "SELECT * FROM teacher_subjects WHERE teacher_id = ? AND course_id = ?";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("ii", $teacher_id, $course_id);
@@ -41,18 +43,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result->num_rows > 0) {
             $error_message = "This subject is already assigned to the selected teacher.";
         } else {
+            // Assign the subject to the teacher
             $stmt = $conn->prepare("INSERT INTO teacher_subjects (teacher_id, course_id) VALUES (?, ?)");
-            if ($stmt) {
-                $stmt->bind_param("ii", $teacher_id, $course_id);
-                if ($stmt->execute()) {
-                    $success_message = "Subject assigned successfully!";
-                } else {
-                    $error_message = "Error assigning subject: " . $stmt->error;
-                }
-                $stmt->close();
+            $stmt->bind_param("ii", $teacher_id, $course_id);
+            if ($stmt->execute()) {
+                $success_message = "Subject assigned successfully!";
             } else {
-                $error_message = "Error preparing statement: " . $conn->error;
+                $error_message = "Error assigning subject: " . $stmt->error;
             }
+            $stmt->close();
         }
         $check_stmt->close();
     }

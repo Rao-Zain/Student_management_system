@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 include '../config/connection.php';
-
+include 'attendance_header.php';
 $programs = $conn->query("SELECT id, program_name FROM programs");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -20,13 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $rollFilter = $_POST['roll_filter'];
 
     $sql = "SELECT a.*, s.name, s.roll_no 
-            FROM attendance a
-            JOIN students s ON a.student_id = s.id
-            JOIN student_courses sc ON a.student_id = sc.student_id
-            JOIN courses c ON sc.course_id = c.id
-            JOIN programs p ON c.program_id = p.id
-            WHERE p.id = '$program_id' AND a.subject = '$subject'";
-
+        FROM attendance a
+        JOIN students s ON a.student_id = s.id
+        JOIN student_courses sc ON s.id = sc.student_id
+        JOIN courses c ON sc.course_id = c.id
+        WHERE c.program_id = '$program_id' 
+        AND c.id = '$subject'
+        AND a.subject = c.course_name";
+// echo $sql;
     if (!empty($dateFilter)) {
         $sql .= " AND a.date = '$dateFilter'";
     }
@@ -141,24 +142,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #ffff
         }
     </style>
+               <script>
+function fetchSubjects(programId) {
+    if (!programId) return;
+
+    fetch('fetch_subjects.php?program_id=' + programId)
+        .then(response => response.json())
+        .then(data => {
+            const subjectSelect = document.getElementById('subject-select');
+            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            data.forEach(subject => {
+                const option = document.createElement('option');
+                option.value = subject.id; // Store course ID as value
+                option.textContent = subject.course_name;
+                subjectSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error("Error fetching subjects:", error);
+            alert("Failed to load subjects.");
+        });
+}
+</script>
 </head>
 <body>
-
-<div class="header">
-    <h1>Student Management System</h1>
-    <div class="nav-links">
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="../index.php">Dashboard</a>
-            <a href="../read.php">All Students</a>
-            <a href="../create.php">Add New Student</a>
-            <a href="attendance.php">Mark Attendance</a>
-            <a href="../auth/logout.php">Logout (<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>)</a>
-        <?php else: ?>
-            <a href="../auth/login.php">Login</a>
-            <a href="../auth/register.php">Register</a>
-        <?php endif; ?>
-    </div>
-</div>
 
 <div class="container">
     <h2>View Attendance</h2>
@@ -178,9 +191,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div style="margin-bottom: 15px;">
             <label>Subject:</label>
-            <select class="filter-input" name="subject" id="subject-select">
-                <option value="">Select Subject</option>
-            </select>
+            <select class="filter-input" name="subject" id="subject-select" required>
+    <option value="">Select Subject</option>
+</select>
         </div>
         </div>
         <div class="col-md-6">
@@ -229,33 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php } ?>
 </div>
 
-<script>
-function fetchSubjects(programId) {
-    if (!programId) {
-        console.error("Program ID is not set!");
-        return;
-    }
 
-    fetch('fetch_subjects.php?program_id=' + programId)
-        .then(response => response.json())
-        .then(data => {
-            let subjectSelect = document.getElementById('subject-select');
-            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
 
-            if (data.error) {
-                console.error(data.error); // Log the error
-                alert(data.error); // Notify the user
-            } else {
-                data.forEach(subject => {
-                    let option = document.createElement('option');
-                    option.value = subject.course_name;
-                    option.textContent = subject.course_name;
-                    subjectSelect.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching subjects:', error));
-}
-</script>
 </body>
 </html>

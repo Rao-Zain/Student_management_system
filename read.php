@@ -26,6 +26,7 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
+        
         .card-header {
             background-color: #f8f9fa;
         }
@@ -47,6 +48,7 @@ $result = $conn->query($sql);
             max-width: 100px;
             max-height: 100px;
         }
+        
     </style>
 </head>
 <body>
@@ -177,9 +179,9 @@ $result = $conn->query($sql);
                                onclick="return confirm('Are you sure you want to delete this student?')">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
-                            <!-- <a href="student_detail.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
+                            <a href="student_profile.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
                                 <i class="fas fa-eye"></i> View
-                            </a> -->
+                            </a>
                         </td>
                     </tr>
                     <?php endwhile; ?>

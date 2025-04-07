@@ -8,29 +8,6 @@ body {
     /* max-width: 95%; */
 }
 
-.header {
-    background-color: #4CAF50;
-    padding: 10px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.header h1 {
-    color: white;
-}
-.nav-links a {
-    color: white;
-    text-decoration: none;
-    margin: 0 10px;
-    padding: 6px 12px;
-    border-radius: 5px;
-    transition: background-color 0.5s;
-}
-.nav-links a:hover {
-    background-color: #3e8e41;
-    text-decoration: none;
-    color:rgb(223, 214, 214);
-}
 
 .container {
     margin: 20px auto;

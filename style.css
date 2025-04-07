@@ -17,3 +17,31 @@
     transform: translateY(-5px);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
+/* styles.css */
+
+:root {
+    --bg-color: white;
+    --text-color: black;
+    --card-bg: #f0f0f0;
+  }
+  
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .card {
+    background-color: var(--card-bg);
+    transition: background-color 0.3s ease;
+  }
+  
+  .dark-mode {
+    --bg-color: #1a202c;
+    --text-color: #e2e8f0;
+    --card-bg: #2d3748;
+  }
+  
+  .dark-mode .shadow-lg {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  }

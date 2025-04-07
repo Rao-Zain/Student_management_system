@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../config/connection.php';
-
+include 'attendance_header.php';
 if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] !== 'Teacher' && $_SESSION['user_role'] !== 'admin')) {
     header('Location: ../auth/login.php');
     exit();
@@ -109,25 +109,12 @@ if (isset($_POST['student_id'])) {
 <head>
     <title>Mark Attendance</title>
     <link rel="stylesheet" href="attendance_style.css">
+   
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-<div class="header">
-    <h1>Student Management System</h1>
-    <div class="nav-links">
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="../index.php">Dashboard</a>
-            <a href="../read.php">All Students</a>
-            <a href="../create.php">Add New Student</a>
-            <a href="view.php">View Attendance</a>
-            <a href="../auth/logout.php">Logout (<?php echo isset($_SESSION['username']) ? $_SESSION['username'] : 'User'; ?>)</a>
-        <?php else: ?>
-            <a href="../auth/login.php">Login</a>
-            <a href="../auth/register.php">Register</a>
-        <?php endif; ?>
-    </div>
-</div>
+
 <div class="container mt-4">
     <h2 class="mb-4">Mark Attendance</h2>
     

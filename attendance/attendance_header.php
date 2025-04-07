@@ -81,13 +81,14 @@ if (session_status() === PHP_SESSION_NONE) {
                 padding: 1rem 0;
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
                 z-index: 1000;
-                opacity: 0;
-                transform: translateY(-10px);
-                transition: opacity 0.3s ease, transform 0.3s ease;
+                visibility: hidden;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
             }
 
             .nav-links.show {
-                display: flex;
+                visibility: visible;
                 opacity: 1;
                 transform: translateY(0);
             }
@@ -119,6 +120,10 @@ if (session_status() === PHP_SESSION_NONE) {
             color: white;
             text-decoration: none;
         }
+        .student:hover{
+            color:rgb(228, 230, 235);
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -130,23 +135,25 @@ if (session_status() === PHP_SESSION_NONE) {
                 <?php if (isset($_SESSION['user_role'])): ?>
                     <?php if ($_SESSION['user_role'] === 'admin'): ?>
                         
-                        <a href="index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                        <a href="manage_users.php"><i class="fas fa-users-cog"></i> Manage Users</a>
+                        <a href="../index.php"><i class="fas fa-tachometer-alt py-2 "></i> Dashboard</a>
+                        
                     <?php elseif ($_SESSION['user_role'] === 'Teacher'): ?>
                         <a href="teachers/teacher_dashboard.php"><i class="fas fa-chalkboard-teacher"></i> Teacher Dashboard</a>
                     <?php endif; ?>
-                    <a href="read.php"><i class="fas fa-list-ul"></i> All Students</a>
-                    <a href="create.php"><i class="fas fa-plus-circle"></i> Add Student</a>
-                    <a href="auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout (<?php echo $_SESSION['username']; ?>)</a>
+                    <a href="../read.php"><i class="fas fa-list-ul "></i> All Students</a>
+                    <a href="../create.php"><i class="fas fa-plus-circle "></i> Add Student</a>
+                    <a href="attendance.php"><i class="fa fa-user-check "></i> Mark Attendance</a>
+                    <a href="view.php"><i class="fas fa-clock "></i> View Attendance</a>
+                    <a href="../auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout (<?php echo $_SESSION['username']; ?>)</a>
                 <?php else: ?>
-                    <a href="auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
-                    <a href="auth/register.php"><i class="fas fa-user-plus"></i> Register</a>
+                    <a href="../auth/login.php"><i class="fas fa-sign-in-alt "></i> Login</a>
+                    <a href="../auth/register.php"><i class="fas fa-user-plus "></i> Register</a>
                 <?php endif; ?>
             <?php else: ?>
-                <a href="auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
-                <a href="auth/register.php"><i class="fas fa-user-plus"></i> Register</a>
+                <a href="../auth/login.php"><i class="fas fa-sign-in-alt "></i> Login</a>
+                <a href="../auth/register.php"><i class="fas fa-user-plus "></i> Register</a>
             <?php endif; ?>
-            <button id="darkModeToggle" class="toggle-button">Toggle Dark Mode</button>
+            <!-- <button id="darkModeToggle" class="toggle-button">Toggle Dark Mode</button> -->
         </div>
     </div>
 
@@ -170,18 +177,21 @@ if (session_status() === PHP_SESSION_NONE) {
             body.classList.add('dark-mode');
         }
 
-        // Mobile Menu Toggle
-        menuToggle.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent closing when clicking on the button
-            navLinks.classList.toggle('show');
-        });
+        const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
 
-        // Hide menu when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!navLinks.contains(event.target) && event.target !== menuToggle) {
-                navLinks.classList.remove('show');
-            }
-        });
+menuToggle.addEventListener('click', (event) => {
+    event.stopPropagation(); // Prevent closing when clicking on the button
+    navLinks.classList.toggle('show');
+});
+
+// Hide menu when clicking outside
+document.addEventListener('click', (event) => {
+    if (!navLinks.contains(event.target) && event.target !== menuToggle) {
+        navLinks.classList.remove('show');
+    }
+});
+
     </script>
 </body>
 </html>
