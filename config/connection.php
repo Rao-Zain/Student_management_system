@@ -78,6 +78,7 @@ $program = "CREATE TABLE programs (
 $courses = "CREATE TABLE courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_name VARCHAR(100) NOT NULL,
+    course_code VARCHAR(50) NOT NULL;
     program_id INT,
     -- description TEXT,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
@@ -155,4 +156,151 @@ $student_courses = "CREATE TABLE student_courses (
 //     echo "Error: ".$conn ->error;	
 // }
 
+$parents = "CREATE TABLE parents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id)
+)";
+
+// if($conn->query($parents)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// }
+
+
+$exam = "CREATE TABLE IF NOT EXISTS exams (
+    exam_id INT AUTO_INCREMENT PRIMARY KEY,
+    exam_type_id INT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    exam_date DATE NOT NULL,
+    subject_id INT NOT NULL,
+    description TEXT,
+    FOREIGN KEY (exam_type_id) REFERENCES exam_types(exam_type_id),
+    FOREIGN KEY (subject_id) REFERENCES courses(id)
+)";
+
+// if($conn->query($exam)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
+
+$exam_subjects= "CREATE TABLE exam_subjects (
+    exam_subject_id INT AUTO_INCREMENT PRIMARY KEY,
+    exam_id INT NOT NULL,
+    course_id INT NOT NULL,
+    max_marks DECIMAL(5,2) NOT NULL,
+    passing_marks DECIMAL(5,2) NOT NULL,
+    FOREIGN KEY (exam_id) REFERENCES exams(exam_id),
+    FOREIGN KEY (course_id) REFERENCES courses(id),
+    UNIQUE KEY (exam_id, course_id)
+)";
+
+// if($conn->query($exam_subjects)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
+
+$student_grades = "CREATE TABLE IF NOT EXISTS student_grades (
+    grade_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    exam_id INT NOT NULL,
+    marks_obtained DECIMAL(5,2) NOT NULL,
+    recorded_by INT,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (exam_id) REFERENCES exams(exam_id),
+    FOREIGN KEY (recorded_by) REFERENCES users(id)
+)";
+
+
+// if($conn->query($student_grades)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
+
+
+$grade_scales = "CREATE TABLE grade_scale (
+    scale_id INT AUTO_INCREMENT PRIMARY KEY,
+    min_percentage DECIMAL(5,2) NOT NULL,
+    max_percentage DECIMAL(5,2) NOT NULL,
+    letter_grade VARCHAR(2) NOT NULL,
+    grade_points DECIMAL(3,2) NOT NULL,
+    description VARCHAR(100),
+    UNIQUE KEY (min_percentage, max_percentage)
+);";
+
+
+// if($conn->query($grade_scales)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
+
+$student_performance= "CREATE TABLE IF NOT EXISTS student_performance (
+    performance_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    course_id INT NOT NULL,
+    semester VARCHAR(20),
+    midterm_marks DECIMAL(5,2),
+    final_marks DECIMAL(5,2),
+    sessional_marks DECIMAL(5,2),
+    total_marks DECIMAL(5,2),
+    percentage DECIMAL(5,2),
+    final_grade VARCHAR(2),
+    gpa DECIMAL(3,2),
+    status ENUM('Pass', 'Fail') NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id),
+    FOREIGN KEY (course_id) REFERENCES courses(id),
+    UNIQUE KEY (student_id, course_id, semester)
+)";
+
+// if($conn->query($student_performance)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
+
+$exam_types = "CREATE TABLE exam_types (
+    exam_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    max_marks DECIMAL(5,2) NOT NULL,
+    description TEXT
+)";
+
+
+// if($conn->query($exam_types)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
+
+$exam_type= "INSERT INTO exam_types (name, max_marks, description) VALUES 
+('Midterm', 30, 'Midterm examination'),
+('Final', 50, 'Final examination'),
+('Attendance', 5, 'Class attendance marks'),
+('Quiz', 5, 'Quiz performance marks'),
+('Presentation', 5, 'Presentation marks'),
+('Assignment', 5, 'Assignment marks')";
+
+
+// if($conn->query($exam_type)=== TRUE){
+//     echo "Table Created Successfully";
+// }
+// else{
+//     echo "Error: ".$conn ->error;	
+// };
 ?>

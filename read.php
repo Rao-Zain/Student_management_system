@@ -179,9 +179,11 @@ $result = $conn->query($sql);
                                onclick="return confirm('Are you sure you want to delete this student?')">
                                 <i class="fas fa-trash"></i> Delete
                             </a>
+                               
                             <a href="student_profile.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info">
                                 <i class="fas fa-eye"></i> View
                             </a>
+                            
                         </td>
                     </tr>
                     <?php endwhile; ?>

@@ -14,20 +14,20 @@ $programs = $conn->query("SELECT id, program_name FROM programs");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $program_id = $_POST['program'];
-    $subject = $_POST['subject'];
+    $subject_id = $_POST['subject']; // Changed variable name for clarity
     $dateFilter = $_POST['date_filter'];
     $nameFilter = $_POST['name_filter'];
     $rollFilter = $_POST['roll_filter'];
 
-    $sql = "SELECT a.*, s.name, s.roll_no 
-        FROM attendance a
-        JOIN students s ON a.student_id = s.id
-        JOIN student_courses sc ON s.id = sc.student_id
-        JOIN courses c ON sc.course_id = c.id
-        WHERE c.program_id = '$program_id' 
-        AND c.id = '$subject'
-        AND a.subject = c.course_name";
-// echo $sql;
+    $sql = "SELECT a.*, s.name, s.roll_no
+            FROM attendance a
+            JOIN students s ON a.student_id = s.id
+            JOIN student_courses sc ON s.id = sc.student_id
+            JOIN courses c ON sc.course_id = c.id
+            WHERE c.program_id = '$program_id'
+            AND c.id = '$subject_id'
+            AND a.subject = (SELECT course_name FROM courses WHERE id = '$subject_id')"; // Ensure subject matches the selected course
+
     if (!empty($dateFilter)) {
         $sql .= " AND a.date = '$dateFilter'";
     }
@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <title>View Attendance</title>
-        <link rel="stylesheet" href="attendance_style.css">
+    <link rel="stylesheet" href="attendance_style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <style>
         /* General Styles */
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f9f9f9;
         }
-      
+
         .container {
             max-width: 1200px;
             margin: 20px auto;
@@ -136,40 +136,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 8px 15px;
             border-radius: 5px;
             transition: background-color 0.3s ease;
+            color: white;
+            text-decoration: none;
         }
         .btnn-primary:hover {
             background-color:rgb(57, 7, 133);
             color: #ffff
         }
     </style>
-               <script>
-function fetchSubjects(programId) {
-    if (!programId) return;
+    <script>
+        function fetchSubjects(programId) {
+            if (!programId) return;
 
-    fetch('fetch_subjects.php?program_id=' + programId)
-        .then(response => response.json())
-        .then(data => {
-            const subjectSelect = document.getElementById('subject-select');
-            subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+            fetch('fetch_subjects.php?program_id=' + programId)
+                .then(response => response.json())
+                .then(data => {
+                    const subjectSelect = document.getElementById('subject-select');
+                    subjectSelect.innerHTML = '<option value="">Select Subject</option>';
 
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
 
-            data.forEach(subject => {
-                const option = document.createElement('option');
-                option.value = subject.id; // Store course ID as value
-                option.textContent = subject.course_name;
-                subjectSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error("Error fetching subjects:", error);
-            alert("Failed to load subjects.");
-        });
-}
-</script>
+                    data.forEach(subject => {
+                        const option = document.createElement('option');
+                        option.value = subject.id; // Store course ID as value
+                        option.textContent = subject.course_name;
+                        subjectSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching subjects:", error);
+                    alert("Failed to load subjects.");
+                });
+        }
+    </script>
 </head>
 <body>
 
@@ -178,43 +180,41 @@ function fetchSubjects(programId) {
     <form method="POST">
         <div class="row">
             <div class="col-md-6">
-
-           
-        <div style="margin-bottom: 15px;">
-            <label>Program:</label>
-            <select name="program" class="filter-input" onchange="fetchSubjects(this.value)">
-                <option value="">Select Program</option>
-                <?php while ($row = $programs->fetch_assoc()) { ?>
-                    <option value="<?php echo $row['id']; ?>"><?php echo $row['program_name']; ?></option>
-                <?php } ?>
-            </select>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>Subject:</label>
-            <select class="filter-input" name="subject" id="subject-select" required>
-    <option value="">Select Subject</option>
-</select>
-        </div>
-        </div>
-        <div class="col-md-6">
-        <div style="margin-bottom: 15px;">
-            <label>Date Filter:</label>
-            <input type="date" name="date_filter" class="filter-input">
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>Name Filter:</label>
-            <input type="text" name="name_filter" placeholder="Filter by Name" class="filter-input">
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label>Roll Number Filter:</label>
-            <input type="text" name="roll_filter" placeholder="Filter by Roll Number" class="filter-input">
-        </div>
-        </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Program:</label>
+                    <select name="program" class="filter-input" onchange="fetchSubjects(this.value)">
+                        <option value="">Select Program</option>
+                        <?php while ($row = $programs->fetch_assoc()) { ?>
+                            <option value="<?php echo $row['id']; ?>"><?php echo $row['program_name']; ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Subject:</label>
+                    <select class="filter-input" name="subject" id="subject-select" required>
+                        <option value="">Select Subject</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div style="margin-bottom: 15px;">
+                    <label>Date Filter:</label>
+                    <input type="date" name="date_filter" class="filter-input">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Name Filter:</label>
+                    <input type="text" name="name_filter" placeholder="Filter by Name" class="filter-input">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Roll Number Filter:</label>
+                    <input type="text" name="roll_filter" placeholder="Filter by Roll Number" class="filter-input">
+                </div>
+            </div>
         </div>
         <button type="submit">View Attendance</button>
     </form>
 
-    <?php if (isset($attendance)) { ?>
+    <?php if (isset($attendance) && $attendance->num_rows > 0) { ?>
         <table border="1">
             <tr>
                 <th>Student ID</th>
@@ -234,15 +234,15 @@ function fetchSubjects(programId) {
                     <td><?php echo $row['date']; ?></td>
                     <td><?php echo $row['status']; ?></td>
                     <td>
-                        <a href="attendance_report.php?student_id=<?php echo $row['student_id']; ?>" class="btn btnn-primary">View Report</a>
+                        <a href="attendance_report.php?student_id=<?php echo $row['student_id']; ?>&subject_id=<?php echo $subject_id; ?>" class="btn btnn-primary">View Report</a>
                     </td>
                 </tr>
             <?php } ?>
         </table>
+    <?php } elseif (isset($attendance) && $attendance->num_rows === 0) { ?>
+        <p>No attendance records found for the selected criteria.</p>
     <?php } ?>
 </div>
-
-
 
 </body>
 </html>
