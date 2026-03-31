@@ -3,50 +3,9 @@ require_once '../config/connection.php';
 
 session_start();
 
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
     header("Location: ../auth/login.php");
     exit();
-}
-include 'header.php';
-
-// Fetch all teachers from the 'users' table along with their assigned subjects and subject IDs
-$query = "
-   SELECT u.id, u.username AS teacher_name, c.course_name, c.id as course_id
-FROM users u
-LEFT JOIN teacher_subjects ts ON u.id = ts.teacher_id
-LEFT JOIN courses c ON ts.course_id = c.id
-WHERE u.role = 'Teacher'
-";
-
-$result = $conn->query($query);
-$teachers = [];
-
-while ($row = $result->fetch_assoc()) {
-    $teacherId = $row['id'];
-    $courseName = $row['course_name'] ?? 'None';
-    $courseId = $row['course_id'];
-
-    if (!isset($teachers[$teacherId])) {
-        $teachers[$teacherId]['name'] = $row['teacher_name'];
-        $teachers[$teacherId]['subjects'] = [];
-    }
-
-    // Check if the subject already exists for this teacher
-    $subjectExists = false;
-    foreach ($teachers[$teacherId]['subjects'] as $subject) {
-        if ($subject['id'] == $courseId) {
-            $subjectExists = true;
-            break;
-        }
-    }
-
-    // Add the subject only if it doesn't already exist
-    if (!$subjectExists) {
-        $teachers[$teacherId]['subjects'][] = [
-            'name' => $courseName,
-            'id' => $courseId,
-        ];
-    }
 }
 
 // Handle subject removal
@@ -99,6 +58,49 @@ if (isset($_GET['delete_teacher_id'])) {
         echo "Error deleting teacher: " . $e->getMessage();
     }
 }
+
+include 'header.php';
+
+// Fetch all teachers from the 'users' table along with their assigned subjects and subject IDs
+$query = "
+   SELECT u.id, u.username AS teacher_name, c.course_name, c.id as course_id
+FROM users u
+LEFT JOIN teacher_subjects ts ON u.id = ts.teacher_id
+LEFT JOIN courses c ON ts.course_id = c.id
+WHERE u.role = 'Teacher'
+";
+
+$result = $conn->query($query);
+$teachers = [];
+
+while ($row = $result->fetch_assoc()) {
+    $teacherId = $row['id'];
+    $courseName = $row['course_name'] ?? 'None';
+    $courseId = $row['course_id'];
+
+    if (!isset($teachers[$teacherId])) {
+        $teachers[$teacherId]['name'] = $row['teacher_name'];
+        $teachers[$teacherId]['subjects'] = [];
+    }
+
+    // Check if the subject already exists for this teacher
+    $subjectExists = false;
+    foreach ($teachers[$teacherId]['subjects'] as $subject) {
+        if ($subject['id'] == $courseId) {
+            $subjectExists = true;
+            break;
+        }
+    }
+
+    // Add the subject only if it doesn't already exist
+    if (!$subjectExists) {
+        $teachers[$teacherId]['subjects'][] = [
+            'name' => $courseName,
+            'id' => $courseId,
+        ];
+    }
+}
+
 ?>
 
 <!DOCTYPE html>

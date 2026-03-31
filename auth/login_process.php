@@ -30,11 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['username'] = $user['username'];
           
             // Redirect based on user role
-            if ($user['role'] === 'admin') {
+            if ($user['role'] === 'Admin') {
                 header('Location: ../index.php');
             } elseif ($user['role'] === 'Teacher') {
                 header('Location: ../teachers/teacher_dashboard.php');
-            } elseif ($user['role'] === 'student') {
+            } elseif ($user['role'] === 'Student') {
                 header('Location: ../index.php');
             }
             

@@ -4,7 +4,7 @@ require_once '../config/connection.php';
 require_once 'header.php';
 
 // Check if the user is logged in as an admin
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] != 'admin') {
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] != 'Admin') {
     header('Location: ../index.php');
     exit();
 }
@@ -12,14 +12,14 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] != 'admin') {
 // Check if the form has been submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get the data from the form
-    $name = $_POST['name'];
+    $username = $_POST['name'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $department = $_POST['department']; // Department instead of subject
+    $role = 'Teacher';
 
-    // Insert the teacher into the database
-    $stmt = $conn->prepare("INSERT INTO teachers (name, email, password, department) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssss", $name, $email, $password, $department); // Use department instead of subject
+    // Insert the teacher into the users table
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $username, $email, $password, $role);
 
     if ($stmt->execute()) {
         echo "<div class='bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative' role='alert'>
@@ -67,12 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div>
                 <label class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
                 <input type="password" name="password" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-
-            <!-- Department Field (Instead of Subject) -->
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Department:</label>
-                <input type="text" name="department" required class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
 
             <!-- Submit Button -->

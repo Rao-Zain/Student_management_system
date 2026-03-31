@@ -1,11 +1,13 @@
 <?php
 session_start();
 include '../config/connection.php';
-include 'attendance_header.php';
-if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] !== 'Teacher' && $_SESSION['user_role'] !== 'admin')) {
+
+if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] !== 'Teacher' && $_SESSION['user_role'] !== 'Admin')) {
     header('Location: ../auth/login.php');
     exit();
 }
+
+include 'attendance_header.php';
 
 // Fetch all programs
 $programsQuery = "SELECT id, program_name FROM programs";

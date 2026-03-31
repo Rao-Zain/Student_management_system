@@ -4,7 +4,7 @@ include 'config/connection.php';
 include "includes/header.php";
 
 // Check if the user is logged in and is an admin
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
     header('Location: login.php?error=Unauthorized access');
     exit();
 }

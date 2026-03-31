@@ -5,12 +5,24 @@ $user = "root";
 $password = "";
 $dbname = "Student_Management_System";
 
-$conn = new mysqli($servername, $user, $password, $dbname);
+// Step 1: Connect WITHOUT database
+$conn = new mysqli($servername, $user, $password);
 
-if($conn->connect_error){
-    die("Connection Failed: ".$conn->connect_error);
-
+if ($conn->connect_error) {
+    die("Connection Failed: " . $conn->connect_error);
 }
+
+// Step 2: Create database if not exists
+$sql = "CREATE DATABASE IF NOT EXISTS $dbname";
+
+if ($conn->query($sql) !== TRUE) {
+    die("Error creating database: " . $conn->error);
+}
+
+// Step 3: Select the database
+$conn->select_db($dbname);
+
+
 // header("Location: read.php");
 // echo "Connected Successfully";
 
@@ -22,75 +34,76 @@ if($conn->connect_error){
 //     echo "Error: ".$conn ->error;
 // }
 
-$user = " CREATE TABLE IF NOT EXISTS users(
+
+$userTable = "CREATE TABLE IF NOT EXISTS users (
     id INT(6) AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     reset_token VARCHAR(255),
     verification_token VARCHAR(255),
-    is_verified  TINYINT(1) DEFAULT 0,
-    role VARCHAR(20) DEFAULT 'student'
+    is_verified TINYINT(1) DEFAULT 0,
+    role ENUM('Admin', 'Student', 'Teacher') DEFAULT 'Student'
 )";
-$users = "ALTER TABLE users ADD COLUMN role ENUM('Admin', 'Student', 'Teacher') DEFAULT 'Student'";
 
-// if($conn->query($user)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if ($conn->query($userTable) !== TRUE) {
+    die("Error creating users table: " . $conn->error);
+}
+
+
 
 
 $sql = " CREATE TABLE if not EXISTS students(
     id INT(6) AUTO_INCREMENT PRIMARY KEY,
-     name VARCHAR(244) NOT NULL,
-     marks int(11) NOT NULL,
-     roll_no VARCHAR(255) NOT NULL,
-     password varchar(255) not null,
-     last_qualification varchar(255) not null,
-     
-     gender varchar(255) not null,
-     address varchar(255) not null,
-        result_card varchar(255) not null
-     )";
-
-// if($conn->query($sql)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
-
-$program = "CREATE TABLE programs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    program_name VARCHAR(100) NOT NULL,
-    -- description TEXT
+    name VARCHAR(244) NOT NULL,
+    father_name VARCHAR(255),
+    marks int(11) NOT NULL,
+    roll_no VARCHAR(255) NOT NULL,
+    password varchar(255) not null,
+    last_qualification varchar(255) not null,
+    gender varchar(255) not null,
+    address varchar(255) not null,
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    result_card varchar(255) not null
 )";
 
-// if($conn->query($program)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if($conn->query($sql) !== TRUE){
+    die("Error creating students table: ".$conn ->error);
+}
 
-$courses = "CREATE TABLE courses (
+// Add missing columns to students table if they don't exist
+$alter_students = "ALTER TABLE students 
+    ADD COLUMN IF NOT EXISTS father_name VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS phone VARCHAR(50)";
+
+if($conn->query($alter_students) !== TRUE){
+    die("Error altering students table: ".$conn->error);
+}
+
+$program = "CREATE TABLE IF NOT EXISTS programs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    program_name VARCHAR(100) NOT NULL
+)";
+if($conn->query($program)=== TRUE){
+    // Table created
+} else {
+    echo "Error: ".$conn->error;
+}
+
+$courses = "CREATE TABLE IF NOT EXISTS courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     course_name VARCHAR(100) NOT NULL,
-    course_code VARCHAR(50) NOT NULL;
+    course_code VARCHAR(50) NOT NULL,
     program_id INT,
-    -- description TEXT,
     FOREIGN KEY (program_id) REFERENCES programs(id) ON DELETE CASCADE
 )";
-
-
-// if($conn->query($courses)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if($conn->query($courses)=== TRUE){
+    
+} else {
+    echo "Error: ".$conn->error;
+}
 
 $attendance = "CREATE TABLE IF NOT EXISTS attendance (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -100,48 +113,57 @@ $attendance = "CREATE TABLE IF NOT EXISTS attendance (
     status VARCHAR(20)
 )";
 
-// if($conn->query($attendance)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if($conn->query($attendance)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+}
 
-// $subject = "ALTER TABLE attendance ADD subject VARCHAR(255) NOT NULL";
-// if($conn->query($subject)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
-$teacher = "CREATE TABLE teachers (
+// Removed duplicate ALTER TABLE for 'subject' column in 'attendance'
+
+// Migrate teachers to users if teachers table exists
+$result = $conn->query("SHOW TABLES LIKE 'teachers'");
+if ($result && $result->num_rows > 0) {
+    // Insert teachers into users, avoiding duplicates by email
+    $migrate = "INSERT INTO users (username, email, password, role) 
+                SELECT name, email, password, 'Teacher' FROM teachers 
+                WHERE email NOT IN (SELECT email FROM users)";
+    $conn->query($migrate);
+
+    // Update teacher_subjects to use the new user ids
+    $update_ts = "UPDATE teacher_subjects 
+                  SET teacher_id = (SELECT u.id FROM users u 
+                                    INNER JOIN teachers t ON u.email = t.email 
+                                    WHERE t.id = teacher_subjects.teacher_id)";
+    $conn->query($update_ts);
+
+    // Alter the foreign key to reference users instead of teachers
+    $alter_fk = "ALTER TABLE teacher_subjects 
+                 DROP FOREIGN KEY teacher_subjects_ibfk_1, 
+                 ADD FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE";
+    $conn->query($alter_fk);
+}
+
+// Drop the teachers table
+$drop_teacher = "DROP TABLE IF EXISTS teachers";
+$conn->query($drop_teacher);
+
+// Create teacher_subjects if not exists (with correct FK)
+$teacher_subject = "CREATE TABLE IF NOT EXISTS teacher_subjects (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    subject VARCHAR(100) NOT NULL
+    teacher_id INT NOT NULL,
+    course_id INT NOT NULL,
+    FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 )";
-// if($conn->query($teacher)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
-$teacher_sbuject = "CREATE TABLE IF NOT EXISTS `teacher_subjects` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `teacher_id` INT NOT NULL,
-    `course_id ` INT NOT NULL,
-    FOREIGN KEY (`teacher_id`) REFERENCES `teachers`(`id`),
-    FOREIGN KEY (`subject_id`) REFERENCES `courses`(`id`)
-)";
-// if($conn->query($teacher_sbuject)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if($conn->query($teacher_subject)=== TRUE){
+    
+} else {
+    echo "Error: ".$conn->error;
+}
 
-$student_courses = "CREATE TABLE student_courses (
+$student_courses = "CREATE TABLE IF NOT EXISTS student_courses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     course_id INT NOT NULL,
@@ -149,14 +171,14 @@ $student_courses = "CREATE TABLE student_courses (
     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 )";
 
-// if($conn->query($student_courses)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if($conn->query($student_courses)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+}
 
-$parents = "CREATE TABLE parents (
+$parents = "CREATE TABLE IF NOT EXISTS parents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -165,12 +187,12 @@ $parents = "CREATE TABLE parents (
     FOREIGN KEY (student_id) REFERENCES students(id)
 )";
 
-// if($conn->query($parents)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// }
+if($conn->query($parents)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+}
 
 
 $exam = "CREATE TABLE IF NOT EXISTS exams (
@@ -184,14 +206,14 @@ $exam = "CREATE TABLE IF NOT EXISTS exams (
     FOREIGN KEY (subject_id) REFERENCES courses(id)
 )";
 
-// if($conn->query($exam)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+if($conn->query($exam)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+};
 
-$exam_subjects= "CREATE TABLE exam_subjects (
+$exam_subjects= "CREATE TABLE IF NOT EXISTS exam_subjects (
     exam_subject_id INT AUTO_INCREMENT PRIMARY KEY,
     exam_id INT NOT NULL,
     course_id INT NOT NULL,
@@ -202,12 +224,12 @@ $exam_subjects= "CREATE TABLE exam_subjects (
     UNIQUE KEY (exam_id, course_id)
 )";
 
-// if($conn->query($exam_subjects)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+if($conn->query($exam_subjects)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+};
 
 $student_grades = "CREATE TABLE IF NOT EXISTS student_grades (
     grade_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -222,15 +244,15 @@ $student_grades = "CREATE TABLE IF NOT EXISTS student_grades (
 )";
 
 
-// if($conn->query($student_grades)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+if($conn->query($student_grades)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+};
 
 
-$grade_scales = "CREATE TABLE grade_scale (
+$grade_scales = "CREATE TABLE IF NOT EXISTS grade_scale (
     scale_id INT AUTO_INCREMENT PRIMARY KEY,
     min_percentage DECIMAL(5,2) NOT NULL,
     max_percentage DECIMAL(5,2) NOT NULL,
@@ -238,15 +260,12 @@ $grade_scales = "CREATE TABLE grade_scale (
     grade_points DECIMAL(3,2) NOT NULL,
     description VARCHAR(100),
     UNIQUE KEY (min_percentage, max_percentage)
-);";
-
-
-// if($conn->query($grade_scales)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+)";
+if($conn->query($grade_scales)=== TRUE){
+    
+} else {
+    echo "Error: ".$conn->error;
+}
 
 $student_performance= "CREATE TABLE IF NOT EXISTS student_performance (
     performance_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -266,14 +285,14 @@ $student_performance= "CREATE TABLE IF NOT EXISTS student_performance (
     UNIQUE KEY (student_id, course_id, semester)
 )";
 
-// if($conn->query($student_performance)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+if($conn->query($student_performance)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+};
 
-$exam_types = "CREATE TABLE exam_types (
+$exam_types = "CREATE TABLE IF NOT EXISTS exam_types (
     exam_type_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     max_marks DECIMAL(5,2) NOT NULL,
@@ -281,12 +300,12 @@ $exam_types = "CREATE TABLE exam_types (
 )";
 
 
-// if($conn->query($exam_types)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+if($conn->query($exam_types)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+};
 
 $exam_type= "INSERT INTO exam_types (name, max_marks, description) VALUES 
 ('Midterm', 30, 'Midterm examination'),
@@ -297,10 +316,10 @@ $exam_type= "INSERT INTO exam_types (name, max_marks, description) VALUES
 ('Assignment', 5, 'Assignment marks')";
 
 
-// if($conn->query($exam_type)=== TRUE){
-//     echo "Table Created Successfully";
-// }
-// else{
-//     echo "Error: ".$conn ->error;	
-// };
+if($conn->query($exam_type)=== TRUE){
+    
+}
+else{
+    echo "Error: ".$conn ->error;	
+};
 ?>

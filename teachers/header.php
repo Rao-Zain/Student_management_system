@@ -220,7 +220,7 @@ if (session_status() === PHP_SESSION_NONE) {
 </head>
 <body>
     <div class="header">
-        <a href="index.php" class="student">Student Management System</a>
+        <a href="../index.php" class="student">Student Management System</a>
         <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
         <div class="nav-links" id="navLinks">
             <?php if (isset($_SESSION['user_id'])): ?>

@@ -226,7 +226,7 @@ ob_start();
         <div class="nav-links" id="navLinks">
             <?php if (isset($_SESSION['user_id'])): ?>
                 <?php if (isset($_SESSION['user_role'])): ?>
-                    <?php if ($_SESSION['user_role'] === 'admin'): ?>
+                    <?php if ($_SESSION['user_role'] === 'Admin'): ?>
                         <a href="index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     <?php elseif ($_SESSION['user_role'] === 'Teacher'): ?>
                         <a href="teachers/teacher_dashboard.php"><i class="fas fa-chalkboard-teacher"></i> Teacher Dashboard</a>
@@ -266,7 +266,7 @@ ob_start();
                     <div class="dropdown">
                         <div class="dropdown-btn"><i class="fas fa-user-circle"></i> <?php echo $_SESSION['username']; ?></div>
                         <div class="dropdown-content">
-                            <a href="auth/profile.php"><i class="fas fa-user-cog"></i> Profile</a>
+                            <a href="teachers/teacher_profile.php"><i class="fas fa-user-cog"></i> Profile</a>
                             <a href="auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </div>
                     </div>
