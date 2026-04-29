@@ -229,5 +229,7 @@ input:not(:placeholder-shown) ~ label {
   <span style="--i:50;"></span>
 </div>
 
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>
+

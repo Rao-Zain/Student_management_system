@@ -29,7 +29,7 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .header {
-            background: linear-gradient(135deg, #4a90e2, #63a4ff);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
@@ -40,7 +40,7 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .dark-mode .header {
-            background: linear-gradient(135deg, #2d3748, #4a5568);
+            background: linear-gradient(135deg, #5a4fcf, #6b5b95);
         }
 
         .header h1 {
@@ -64,7 +64,7 @@ if (session_status() === PHP_SESSION_NONE) {
         .dropdown-content {
             display: none;
             position: absolute;
-            background: linear-gradient(135deg, #4a90e2, #63a4ff);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-width: 200px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
             z-index: 1;
@@ -73,7 +73,7 @@ if (session_status() === PHP_SESSION_NONE) {
         }
 
         .dark-mode .dropdown-content {
-            background: linear-gradient(135deg, #2d3748, #4a5568);
+            background: linear-gradient(135deg, #5a4fcf, #6b5b95);
         }
 
         .dropdown-content a {
@@ -264,7 +264,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <div class="dropdown">
                         <div class="dropdown-btn"><i class="fas fa-user-circle"></i> <?php echo $_SESSION['username']; ?></div>
                         <div class="dropdown-content">
-                            <a href="../auth/profile.php"><i class="fas fa-user-cog"></i> Profile</a>
+                            <a href="teacher_profile.php"><i class="fas fa-user-cog"></i> Profile</a>
                             <a href="../auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </div>
                     </div>

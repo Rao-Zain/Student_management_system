@@ -34,10 +34,11 @@ $programs = $conn->query("SELECT * FROM programs");
 // Update the course
 if (isset($_POST['update_course'])) {
     $course_name = $_POST['course_name'];
+    $course_code = $_POST['course_code'];
     $program_id = $_POST['program_id'];
 
-    $stmt = $conn->prepare("UPDATE courses SET course_name = ?, program_id = ? WHERE id = ?");
-    $stmt->bind_param("sii", $course_name, $program_id, $course_id);
+    $stmt = $conn->prepare("UPDATE courses SET course_name = ?, course_code = ?, program_id = ? WHERE id = ?");
+    $stmt->bind_param("ssii", $course_name, $course_code, $program_id, $course_id);
     $stmt->execute();
 
     header("Location: manage_courses.php");
@@ -60,9 +61,15 @@ $conn->close();
         <h2 class="text-2xl font-bold mb-4">Edit Course</h2>
         <form method="POST">
             <div class="mb-4">
+                <label class="block mb-1">Course Name</label>
                 <input type="text" name="course_name" value="<?= $course['course_name'] ?>" required class="w-full p-2 border border-gray-300 rounded">
             </div>
             <div class="mb-4">
+                <label class="block mb-1">Course Code</label>
+                <input type="text" name="course_code" value="<?= $course['course_code'] ?>" required class="w-full p-2 border border-gray-300 rounded">
+            </div>
+            <div class="mb-4">
+                <label class="block mb-1">Program</label>
                 <select name="program_id" required class="w-full p-2 border border-gray-300 rounded">
                     <option value="">Select Program</option>
                     <?php while ($program = $programs->fetch_assoc()): ?>
@@ -74,5 +81,7 @@ $conn->close();
         </form>
     </div>
 </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>
+

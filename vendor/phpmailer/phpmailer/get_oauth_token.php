@@ -69,6 +69,7 @@ if (!isset($_GET['code']) && !isset($_POST['provider'])) {
     <p>TenantID (only relevant for Azure): <input type="text" name="tenantId"></p>
     <input type="submit" value="Continue">
 </form>
+    <?php include '../../../includes/footer.php'; ?>
 </body>
 </html>
     <?php
@@ -180,3 +181,4 @@ if (!isset($_GET['code'])) {
     //Use this to get a new access token if the old one expires
     echo 'Refresh Token: ', htmlspecialchars($token->getRefreshToken());
 }
+

@@ -26,38 +26,76 @@ $result = $stmt->get_result();
 </head>
 <body >
     <div class="container mx-auto mt-10">
+        <!-- Success/Error Messages -->
+        <?php if (isset($_GET['success'])): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+                <?= htmlspecialchars($_GET['success']) ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                <?= htmlspecialchars($_GET['error']) ?>
+            </div>
+        <?php endif; ?>
+
         <h1 class="text-3xl font-bold mb-6">Manage Users</h1>
         <div class="overflow-x-auto">
             <table class="w-full table-auto shadow-md rounded-lg">
-                <thead>
-                    <tr class="">
-                        <th class="px-4 py-2">ID</th>
-                        <th class="px-4 py-2">Username</th>
-                        <th class="px-4 py-2">Email</th>
-                        <th class="px-4 py-2">Role</th>
-                        <th class="px-4 py-2">Actions</th>
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-center text-gray-700 font-semibold uppercase">ID</th>
+                        <th class="px-4 py-3 text-center text-gray-700 font-semibold uppercase">Username</th>
+                        <th class="px-4 py-3 text-center text-gray-700 font-semibold uppercase">Email</th>
+                        <th class="px-4 py-3 text-center text-gray-700 font-semibold uppercase">Role</th>
+                        <th class="px-4 py-3 text-center text-gray-700 font-semibold uppercase">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($user = $result->fetch_assoc()): ?>
-                        <tr class="border-b">
-                            <td class="px-4 py-2 text-center"><?= $user['id'] ?></td>
-                            <td class="px-4 py-2 text-center"><?= $user['username'] ?></td>
-                            <td class="px-4 py-2 text-center"><?= $user['email'] ?></td>
-                            <td class="px-4 py-2 text-center"><?= $user['role'] ?></td>
-                            <td class="px-4 py-2 text-center">
-                                <?php if ($user['role'] === 'admin'): ?>
-                                    <span class="text-green-600 font-semibold">Admin</span>
-                                <?php elseif ($user['role'] === 'Teacher'): ?>
-                                    <span class="text-yellow-600 font-semibold">Teacher</span>
+                        <tr class="border-b bg-white hover:bg-gray-50">
+                            <td class="px-4 py-4 text-center text-gray-800"><?= htmlspecialchars($user['id']) ?></td>
+                            <td class="px-4 py-4 text-center text-gray-800"><?= htmlspecialchars($user['username']) ?></td>
+                            <td class="px-4 py-4 text-center text-gray-800"><?= htmlspecialchars($user['email']) ?></td>
+                            <td class="px-4 py-4 text-center">
+                                <?php if (strtolower($user['role']) === 'admin'): ?>
+                                    <span class="px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">Admin</span>
+                                <?php elseif (strtolower($user['role']) === 'teacher'): ?>
+                                    <span class="px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-800">Teacher</span>
                                 <?php else: ?>
+                                    <span class="px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-800">Student</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-4 text-center flex justify-center items-center space-x-2">
+                                <?php if (strtolower($user['role']) === 'admin'): ?>
+                                    <?php if ($user['id'] != $_SESSION['user_id']): ?>
+                                        <form action="update_user_role.php" method="POST" class="inline-block">
+                                            <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
+                                            <button type="submit" name="make_teacher" class="bg-orange-500 text-white py-1 px-3 rounded hover:bg-orange-600 transition text-xs font-bold shadow-sm">Make Teacher</button>
+                                        </form>
+                                        <form action="update_user_role.php" method="POST" class="inline-block">
+                                            <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
+                                            <button type="submit" name="make_student" class="bg-gray-500 text-white py-1 px-3 rounded hover:bg-gray-600 transition text-xs font-bold shadow-sm">Make Student</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <span class="text-sm text-gray-400 italic">Current User</span>
+                                    <?php endif; ?>
+                                <?php elseif (strtolower($user['role']) === 'teacher'): ?>
                                     <form action="update_user_role.php" method="POST" class="inline-block">
-                                        <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                        <button type="submit" name="make_admin" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition">Make Admin</button>
+                                        <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
+                                        <button type="submit" name="make_admin" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition text-xs font-bold shadow-sm">Make Admin</button>
                                     </form>
                                     <form action="update_user_role.php" method="POST" class="inline-block">
-                                        <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
-                                        <button type="submit" name="make_teacher" class="bg-orange-500 text-white py-1 px-3 rounded hover:bg-orange-600 transition">Make Teacher</button>
+                                        <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
+                                        <button type="submit" name="make_student" class="bg-gray-500 text-white py-1 px-3 rounded hover:bg-gray-600 transition text-xs font-bold shadow-sm">Make Student</button>
+                                    </form>
+                                <?php else: ?>
+                                    <form action="update_user_role.php" method="POST" class="inline-block">
+                                        <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
+                                        <button type="submit" name="make_admin" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition text-xs font-bold shadow-sm">Make Admin</button>
+                                    </form>
+                                    <form action="update_user_role.php" method="POST" class="inline-block">
+                                        <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
+                                        <button type="submit" name="make_teacher" class="bg-orange-500 text-white py-1 px-3 rounded hover:bg-orange-600 transition text-xs font-bold shadow-sm">Make Teacher</button>
                                     </form>
                                 <?php endif; ?>
                             </td>
@@ -67,5 +105,6 @@ $result = $stmt->get_result();
             </table>
         </div>
     </div>
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>

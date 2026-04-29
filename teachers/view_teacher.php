@@ -156,5 +156,6 @@ while ($row = $result->fetch_assoc()) {
             <a href="teacher_dashboard.php" class="bg-blue-500 text-white py-2 px-4 rounded">Go To Dashboard</a>
         </div>
     </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

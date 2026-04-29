@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && strtolower($_SESSION['user_role']) !== 'teacher')) {
+    header("Location: ../auth/login.php?error=Unauthorized access");
+    exit();
+}
 require_once '../config/connection.php';
 require_once 'grade_functions.php';
 
@@ -28,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_grades'])) {
         }
         
         $stmt = $conn->prepare("INSERT INTO student_grades
-                              (student_id, exam_subject_id, marks_obtained, recorded_by)
+                              (student_id, exam_id, marks_obtained, recorded_by)
                               VALUES (?, ?, ?, ?)
                               ON DUPLICATE KEY UPDATE
                               marks_obtained = VALUES(marks_obtained),
@@ -54,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_grades'])) {
 $students = $conn->query("SELECT s.id, s.name, s.roll_no, sg.marks_obtained
                                FROM students s
                                JOIN student_courses sc ON s.id = sc.student_id
-                               LEFT JOIN student_grades sg ON sg.student_id = s.id AND sg.exam_subject_id = $exam_id
+                               LEFT JOIN student_grades sg ON sg.student_id = s.id AND sg.exam_id = $exam_id
                                WHERE sc.course_id = {$exam['subject_id']}
                                ORDER BY s.roll_no");
 ?>
@@ -116,5 +121,6 @@ $students = $conn->query("SELECT s.id, s.name, s.roll_no, sg.marks_obtained
             </div>
         </form>
     </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

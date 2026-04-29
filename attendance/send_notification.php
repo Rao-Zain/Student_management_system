@@ -43,7 +43,8 @@ function sendEmailNotification($to, $studentName, $absentDates) {
         </ul>
         <p>Please contact the school if there are any concerns.</p>
         <p>Best regards,<br>School Administration</p>
-    </body>
+        <?php include '../includes/footer.php'; ?>
+</body>
     </html>
     ";
     

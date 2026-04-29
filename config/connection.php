@@ -199,9 +199,11 @@ $exam = "CREATE TABLE IF NOT EXISTS exams (
     exam_id INT AUTO_INCREMENT PRIMARY KEY,
     exam_type_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
-    exam_date DATE NOT NULL,
+    exam_date DATETIME NOT NULL,
     subject_id INT NOT NULL,
     description TEXT,
+    duration_minutes INT DEFAULT 60,
+    is_active TINYINT DEFAULT 1,
     FOREIGN KEY (exam_type_id) REFERENCES exam_types(exam_type_id),
     FOREIGN KEY (subject_id) REFERENCES courses(id)
 )";
@@ -322,4 +324,15 @@ if($conn->query($exam_type)=== TRUE){
 else{
     echo "Error: ".$conn ->error;	
 };
+
+// Add new columns to exams table if they don't exist (for existing databases)
+// Check if columns exist first
+$column_check = $conn->query("SHOW COLUMNS FROM exams LIKE 'duration_minutes'");
+if ($column_check->num_rows == 0) {
+    $conn->query("ALTER TABLE exams ADD COLUMN duration_minutes INT DEFAULT 60 AFTER description");
+}
+$column_check = $conn->query("SHOW COLUMNS FROM exams LIKE 'is_active'");
+if ($column_check->num_rows == 0) {
+    $conn->query("ALTER TABLE exams ADD COLUMN is_active TINYINT DEFAULT 1 AFTER duration_minutes");
+}
 ?>

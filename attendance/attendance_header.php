@@ -228,7 +228,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <?php if ($_SESSION['user_role'] === 'admin'): ?>
                         <a href="../index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
                     <?php elseif ($_SESSION['user_role'] === 'Teacher'): ?>
-                        <a href="teachers/teacher_dashboard.php"><i class="fas fa-chalkboard-teacher"></i> Teacher Dashboard</a>
+                        <a href="../teachers/teacher_dashboard.php"><i class="fas fa-chalkboard-teacher"></i> Teacher Dashboard</a>
                     <?php endif; ?>
                     
                     <!-- Students Dropdown -->
@@ -335,5 +335,6 @@ if (session_status() === PHP_SESSION_NONE) {
             }
         }
     </script>
+   
 </body>
 </html>

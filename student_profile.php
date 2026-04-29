@@ -215,5 +215,6 @@ while ($row = $course_result->fetch_assoc()) {
             body.classList.add('dark-mode');
         }
     </script>
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>

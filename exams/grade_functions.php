@@ -9,7 +9,7 @@ function calculate_sessional_marks($student_id, $course_id) {
     
     $query = "SELECT SUM(sg.marks_obtained) as total_sessional
               FROM student_grades sg
-              JOIN exams e ON sg.exam_subject_id = e.exam_id
+              JOIN exams e ON sg.exam_id = e.exam_id
               JOIN exam_types et ON e.exam_type_id = et.exam_type_id
               WHERE sg.student_id = ?
               AND e.subject_id = ?
@@ -63,7 +63,7 @@ function update_student_performance($student_id, $course_id, $semester = null) {
     // Get midterm marks
     $midterm = $conn->query("SELECT sg.marks_obtained
                             FROM student_grades sg
-                            JOIN exams e ON sg.exam_subject_id = e.exam_id
+                            JOIN exams e ON sg.exam_id = e.exam_id
                             JOIN exam_types et ON e.exam_type_id = et.exam_type_id
                             WHERE sg.student_id = $student_id
                             AND e.subject_id = $course_id
@@ -72,7 +72,7 @@ function update_student_performance($student_id, $course_id, $semester = null) {
     // Get final exam marks
     $final = $conn->query("SELECT sg.marks_obtained
                           FROM student_grades sg
-                          JOIN exams e ON sg.exam_subject_id = e.exam_id
+                          JOIN exams e ON sg.exam_id = e.exam_id
                           JOIN exam_types et ON e.exam_type_id = et.exam_type_id
                           WHERE sg.student_id = $student_id
                           AND e.subject_id = $course_id

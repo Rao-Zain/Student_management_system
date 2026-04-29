@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: auth/login.php");
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && strtolower($_SESSION['user_role']) !== 'teacher')) {
+    header("Location: auth/login.php?error=Unauthorized access");
     exit();
 }
 include 'config/connection.php';
@@ -203,5 +203,6 @@ while ($row = $coursesResult->fetch_assoc()) {
         });
     });
 </script> -->
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>

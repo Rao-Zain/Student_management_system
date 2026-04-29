@@ -1,4 +1,9 @@
 <?php
+session_start();
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && strtolower($_SESSION['user_role']) !== 'teacher')) {
+    header("Location: ../auth/login.php?error=Unauthorized access");
+    exit();
+}
 require_once '../config/connection.php';
 
 // Handle form submissions
@@ -225,5 +230,6 @@ $scales = $conn->query("SELECT * FROM grade_scale ORDER BY min_percentage DESC")
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

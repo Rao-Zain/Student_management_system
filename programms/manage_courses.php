@@ -10,10 +10,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
 // Add Course
 if (isset($_POST['add_course'])) {
     $course_name = $_POST['course_name'];
+    $course_code = $_POST['course_code'];
     $program_id = $_POST['program_id'];
 
-    $stmt = $conn->prepare("INSERT INTO courses (course_name, program_id) VALUES (?, ?)");
-    $stmt->bind_param("si", $course_name, $program_id);
+    $stmt = $conn->prepare("INSERT INTO courses (course_name, course_code, program_id) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $course_name, $course_code, $program_id);
     $stmt->execute();
 
     header("Location: manage_courses.php");
@@ -24,10 +25,11 @@ if (isset($_POST['add_course'])) {
 if (isset($_POST['edit_course'])) {
     $id = intval($_POST['course_id']);
     $course_name = $_POST['course_name'];
+    $course_code = $_POST['course_code'];
     $program_id = $_POST['program_id'];
 
-    $stmt = $conn->prepare("UPDATE courses SET course_name = ?, program_id = ? WHERE id = ?");
-    $stmt->bind_param("sii", $course_name, $program_id, $id);
+    $stmt = $conn->prepare("UPDATE courses SET course_name = ?, course_code = ?, program_id = ? WHERE id = ?");
+    $stmt->bind_param("ssii", $course_name, $course_code, $program_id, $id);
     $stmt->execute();
 
     header("Location: manage_courses.php");
@@ -112,7 +114,16 @@ $conn->close();
     <div class="bg-white shadow-md rounded p-6 mb-6">
         <h2 class="text-2xl font-bold mb-4">Add New Course</h2>
         <form method="POST" action="">
-            <input type="text" name="course_name" placeholder="Course Name" required class="w-full p-2 mb-4 border rounded">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-1">Course Name</label>
+                    <input type="text" name="course_name" placeholder="Course Name" required class="w-full p-2 mb-4 border rounded">
+                </div>
+                <div>
+                    <label class="block mb-1">Course Code</label>
+                    <input type="text" name="course_code" placeholder="Course Code (e.g., CS101)" required class="w-full p-2 mb-4 border rounded">
+                </div>
+            </div>
             <select name="program_id" required class="w-full p-2 mb-4 border rounded">
                 <option value="">Select Program</option>
                 <?php while ($program = $programs->fetch_assoc()): ?>
@@ -129,6 +140,7 @@ $conn->close();
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Course Code</th>
                     <th>Course Name</th>
                     <th>Program</th>
                     <th>Actions</th>
@@ -138,6 +150,7 @@ $conn->close();
                 <?php while ($row = $courses->fetch_assoc()): ?>
                     <tr>
                         <td><?= $row['id'] ?></td>
+                        <td><?= $row['course_code'] ?></td>
                         <td><?= $row['course_name'] ?></td>
                         <td><?= $row['program_name'] ?></td>
                         <td>
@@ -150,5 +163,7 @@ $conn->close();
         </table>
     </div>
 </div>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>
+

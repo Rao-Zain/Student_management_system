@@ -3,8 +3,8 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: auth/login.php");
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && strtolower($_SESSION['user_role']) !== 'teacher')) {
+    header("Location: ../auth/login.php?error=Unauthorized access");
     exit();
 }
 
@@ -484,5 +484,6 @@ if (isset($_GET['student_id']) && isset($_GET['subject_id'])) {
 <!-- Include Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: auth/login.php");
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && strtolower($_SESSION['user_role']) !== 'teacher')) {
+    header("Location: auth/login.php?error=Unauthorized access");
     exit();
 }
 
@@ -391,5 +391,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // For example, you might want to add client-side validation or dynamic form behavior
 });
 </script>
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>

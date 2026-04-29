@@ -32,7 +32,7 @@ if (isset($_POST['email'])) {
         $stmt->execute();
 
         // Create a reset link
-        $resetLink = "http://localhost/student_management_system/reset_password.php?token=" . $token;
+        $resetLink = "http://localhost/student_management_system/auth/reset_password.php?token=" . $token;
 
         // Show the link for testing (in real case, send via email)
         echo "Password reset link: <a href='" . $resetLink . "'>Click here to reset your password</a>";
@@ -93,5 +93,7 @@ if (isset($_POST['email'])) {
     <button type="submit">Send Reset Link</button>
 </form>
 
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>
+

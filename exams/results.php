@@ -4,6 +4,11 @@ require_once 'grade_functions.php';
 
 session_start();
 
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php?error=Unauthorized access");
+    exit();
+}
+
 // Initialize variables
 $error = '';
 $student = null;
@@ -76,7 +81,7 @@ function get_component_marks($student_id, $course_id, $component) {
     global $conn;
     return $conn->query("SELECT sg.marks_obtained, e.name as exam_name, e.exam_date
                         FROM student_grades sg
-                        JOIN exams e ON sg.exam_subject_id = e.exam_id
+                        JOIN exams e ON sg.exam_id = e.exam_id
                         JOIN exam_types et ON e.exam_type_id = et.exam_type_id
                         WHERE sg.student_id = $student_id
                         AND e.subject_id = $course_id
@@ -420,6 +425,26 @@ function get_component_marks($student_id, $course_id, $component) {
             border-color: #5c636a;
         }
         
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        
+        .text-success {
+            color: var(--success-color) !important;
+        }
+        
+        .text-warning {
+            color: var(--warning-color) !important;
+        }
+        
+        .text-danger {
+            color: var(--danger-color) !important;
+        }
+        
+        .text-info {
+            color: var(--accent-color) !important;
+        }
+        
         @media print {
             .no-print { display: none; }
             body { background-color: white; }
@@ -498,7 +523,14 @@ function get_component_marks($student_id, $course_id, $component) {
                         <i class="fas fa-info-circle me-2"></i> No course records found for this student.
                     </div>
                 <?php else: ?>
-                    <?php foreach ($performance_data as $course_id => $data): 
+                    <?php 
+                    $course_gpa_data = []; // Initialize array for CGPA calculation
+                    foreach ($performance_data as $course_id => $data): 
+                        $course = $data['course'];
+                        $performance = $data['performance'][0] ?? null;
+                        $all_exams_completed = $data['all_exams_completed'];
+                        
+                        if (!$performance) continue;
                         $course = $data['course'];
                         $performance = $data['performance'][0] ?? null;
                         $all_exams_completed = $data['all_exams_completed'];
@@ -512,6 +544,121 @@ function get_component_marks($student_id, $course_id, $component) {
                         $quiz = get_component_marks($student['id'], $course_id, 'Quiz');
                         $presentation = get_component_marks($student['id'], $course_id, 'Presentation');
                         $assignment = get_component_marks($student['id'], $course_id, 'Assignment');
+                        
+                        // Calculate sessional marks as sum of 4 components (Attendance + Quiz + Presentation + Assignment)
+                        $sessional_marks = 0;
+                        $sessional_completed = true;
+                        $sessional_components = [];
+                        
+                        if ($attendance && isset($attendance['marks_obtained'])) {
+                            $sessional_marks += $attendance['marks_obtained'];
+                            $sessional_components['attendance'] = $attendance['marks_obtained'];
+                        } else {
+                            $sessional_completed = false;
+                            $sessional_components['attendance'] = 0;
+                        }
+                        
+                        if ($quiz && isset($quiz['marks_obtained'])) {
+                            $sessional_marks += $quiz['marks_obtained'];
+                            $sessional_components['quiz'] = $quiz['marks_obtained'];
+                        } else {
+                            $sessional_completed = false;
+                            $sessional_components['quiz'] = 0;
+                        }
+                        
+                        if ($presentation && isset($presentation['marks_obtained'])) {
+                            $sessional_marks += $presentation['marks_obtained'];
+                            $sessional_components['presentation'] = $presentation['marks_obtained'];
+                        } else {
+                            $sessional_completed = false;
+                            $sessional_components['presentation'] = 0;
+                        }
+                        
+                        if ($assignment && isset($assignment['marks_obtained'])) {
+                            $sessional_marks += $assignment['marks_obtained'];
+                            $sessional_components['assignment'] = $assignment['marks_obtained'];
+                        } else {
+                            $sessional_completed = false;
+                            $sessional_components['assignment'] = 0;
+                        }
+                        
+                        // Calculate total marks and grade for this course
+                        $total_marks = ($midterm['marks_obtained'] ?? 0) + ($final['marks_obtained'] ?? 0) + $sessional_marks;
+                        $percentage = $total_marks;
+                        
+                        // Grade point and grade calculation with decimal points
+                        $grade_point = 0;
+                        $letter_grade = '';
+                        $grade_description = '';
+                        
+                        if ($percentage >= 95) {
+                            $grade_point = 4.0;
+                            $letter_grade = 'A+';
+                            $grade_description = 'Outstanding';
+                        } elseif ($percentage >= 90) {
+                            $grade_point = 3.9;
+                            $letter_grade = 'A';
+                            $grade_description = 'Excellent';
+                        } elseif ($percentage >= 85) {
+                            $grade_point = 3.7;
+                            $letter_grade = 'A-';
+                            $grade_description = 'Very Good';
+                        } elseif ($percentage >= 80) {
+                            $grade_point = 3.5;
+                            $letter_grade = 'B+';
+                            $grade_description = 'Good';
+                        } elseif ($percentage >= 75) {
+                            $grade_point = 3.4;
+                            $letter_grade = 'B+';
+                            $grade_description = 'Good';
+                        } elseif ($percentage >= 70) {
+                            $grade_point = 3.2;
+                            $letter_grade = 'B';
+                            $grade_description = 'Above Average';
+                        } elseif ($percentage >= 65) {
+                            $grade_point = 3.0;
+                            $letter_grade = 'B';
+                            $grade_description = 'Good';
+                        } elseif ($percentage >= 60) {
+                            $grade_point = 2.8;
+                            $letter_grade = 'B-';
+                            $grade_description = 'Satisfactory';
+                        } elseif ($percentage >= 55) {
+                            $grade_point = 2.5;
+                            $letter_grade = 'C+';
+                            $grade_description = 'Above Pass';
+                        } elseif ($percentage >= 50) {
+                            $grade_point = 2.0;
+                            $letter_grade = 'C';
+                            $grade_description = 'Pass';
+                        } elseif ($percentage >= 45) {
+                            $grade_point = 1.5;
+                            $letter_grade = 'C-';
+                            $grade_description = 'Marginal Pass';
+                        } elseif ($percentage >= 40) {
+                            $grade_point = 1.0;
+                            $letter_grade = 'D';
+                            $grade_description = 'Low Pass';
+                        } else {
+                            $grade_point = 0.0;
+                            $letter_grade = 'F';
+                            $grade_description = 'Fail';
+                        }
+                        
+                        // Store course data for CGPA calculation
+                        $course_gpa_data[] = [
+                            'course_name' => $course['course_name'],
+                            'course_code' => $course['course_code'],
+                            'total_marks' => $total_marks,
+                            'percentage' => $percentage,
+                            'grade_point' => $grade_point,
+                            'letter_grade' => $letter_grade,
+                            'grade_description' => $grade_description,
+                            'status' => $letter_grade === 'F' ? 'Fail' : 'Pass'
+                        ];
+                        
+                        // Check if all components (exams + sessional) are completed
+                        $all_components_completed = $all_exams_completed && $sessional_completed;
                     ?>
                     <div class="report-card">
                         <div class="course-performance">
@@ -524,10 +671,10 @@ function get_component_marks($student_id, $course_id, $component) {
                                 </span>
                             </div>
                             
-                            <?php if (!$all_exams_completed): ?>
+                            <?php if (!$all_components_completed): ?>
                             <div class="pending-exam">
                                 <i class="fas fa-exclamation-triangle me-2"></i> 
-                                <strong>Note:</strong> Some exams for this course are still pending. Final grade will be available after all exams are completed.
+                                <strong>Note:</strong> Final grade will be available after all exams (Midterm, Final) and sessional components (Attendance, Quiz, Presentation, Assignment) are completed.
                             </div>
                             <?php endif; ?>
                             
@@ -568,63 +715,67 @@ function get_component_marks($student_id, $course_id, $component) {
                                     <div class="card component-card sessional-card h-100">
                                         <div class="card-body">
                                             <h5><i class="fas fa-tasks"></i> Sessional</h5>
-                                            <p class="display-6"><?= $performance['sessional_marks'] ?? 0 ?> / 20</p>
-                                            <small class="text-muted">Continuous Assessment</small>
+                                            <p class="display-6"><?= $sessional_marks ?> / 20</p>
+                                            <small class="text-muted"><?= $sessional_completed ? 'All components completed' : 'Pending components' ?></small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Sessional Breakdown -->
-                            <h4 class="section-title">Sessional Components</h4>
+                            <h4 class="section-title">Sessional Components (<?= $sessional_completed ? 'Completed' : 'In Progress' ?>)</h4>
                             <div class="row">
                                 <div class="col-md-3 mb-4">
                                     <div class="sessional-component attendance-component">
                                         <h6><i class="fas fa-user-check"></i> Attendance</h6>
-                                        <p class="fs-3"><?= $attendance['marks_obtained'] ?? 0 ?> / 5</p>
+                                        <p class="fs-3"><?= $sessional_components['attendance'] ?? 0 ?> / 5</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-4">
                                     <div class="sessional-component quiz-component">
                                         <h6><i class="fas fa-question-circle"></i> Quiz</h6>
-                                        <p class="fs-3"><?= $quiz['marks_obtained'] ?? 0 ?> / 5</p>
+                                        <p class="fs-3"><?= $sessional_components['quiz'] ?? 0 ?> / 5</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-4">
                                     <div class="sessional-component presentation-component">
                                         <h6><i class="fas fa-chalkboard-teacher"></i> Presentation</h6>
-                                        <p class="fs-3"><?= $presentation['marks_obtained'] ?? 0 ?> / 5</p>
+                                        <p class="fs-3"><?= $sessional_components['presentation'] ?? 0 ?> / 5</p>
                                     </div>
                                 </div>
                                 <div class="col-md-3 mb-4">
                                     <div class="sessional-component assignment-component">
                                         <h6><i class="fas fa-file-upload"></i> Assignment</h6>
-                                        <p class="fs-3"><?= $assignment['marks_obtained'] ?? 0 ?> / 5</p>
+                                        <p class="fs-3"><?= $sessional_components['assignment'] ?? 0 ?> / 5</p>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Final Results - Only show if all exams are completed -->
-                            <?php if ($all_exams_completed): ?>
+                            <!-- Final Results - Only show if all components (exams + sessional) are completed -->
+                            <?php if ($all_components_completed): ?>
                             <div class="final-result">
-                                <h4>Final Result</h4>
+                                <h4>Course Result</h4>
                                 <div class="row text-center">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <h5>Total Marks</h5>
-                                        <p class="display-5"><?= $performance['total_marks'] ?> / 100</p>
+                                        <p class="display-5"><?= $total_marks ?>/100</p>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <h5>Percentage</h5>
-                                        <p class="display-5"><?= $performance['percentage'] ?>%</p>
+                                        <p class="display-5"><?= $percentage ?>%</p>
                                     </div>
-                                    <div class="col-md-4">
-                                        <h5>Final Grade</h5>
+                                    <div class="col-md-3">
+                                        <h5>Grade</h5>
                                         <p class="display-5">
-                                            <?= $performance['final_grade'] ?>
-                                            <span class="badge bg-<?= $performance['status'] === 'Pass' ? 'success' : 'danger' ?> ms-2">
-                                                <?= $performance['status'] ?>
+                                            <?= $letter_grade ?>
+                                            <span class="badge bg-<?= $status === 'Pass' ? 'success' : 'danger' ?> ms-2">
+                                                <?= $status ?>
                                             </span>
                                         </p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5>Grade Point</h5>
+                                        <p class="display-5"><?= $grade_point ?></p>
                                     </div>
                                 </div>
                             </div>
@@ -632,6 +783,164 @@ function get_component_marks($student_id, $course_id, $component) {
                         </div>
                     </div>
                     <?php endforeach; ?>
+                    
+                    <!-- CGPA Summary Section -->
+                    <?php if (!empty($course_gpa_data)): ?>
+                    <div class="report-card">
+                        <div class="course-performance">
+                            <h3 class="section-title">Academic Summary</h3>
+                            
+                            <!-- Individual Subject Results Table -->
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Course Code</th>
+                                            <th>Course Name</th>
+                                            <th>Marks</th>
+                                            <th>Percentage</th>
+                                            <th>Grade</th>
+                                            <th>Grade Point</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        $total_grade_points = 0;
+                                        $total_courses = count($course_gpa_data);
+                                        $passed_courses = 0;
+                                        $failed_courses = 0;
+                                        
+                                        foreach ($course_gpa_data as $course): 
+                                            $total_grade_points += $course['grade_point'];
+                                            if ($course['status'] === 'Pass') {
+                                                $passed_courses++;
+                                            } else {
+                                                $failed_courses++;
+                                            }
+                                        ?>
+                                        <tr>
+                                            <td><strong><?= htmlspecialchars($course['course_code']) ?></strong></td>
+                                            <td><?= htmlspecialchars($course['course_name']) ?></td>
+                                            <td><?= $course['total_marks'] ?>/100</td>
+                                            <td><?= $course['percentage'] ?>%</td>
+                                            <td><span class="badge bg-<?= $course['status'] === 'Pass' ? 'success' : 'danger' ?>"><?= $course['letter_grade'] ?></span></td>
+                                            <td><strong><?= $course['grade_point'] ?></strong></td>
+                                            <td><span class="badge bg-<?= $course['status'] === 'Pass' ? 'success' : 'danger' ?>"><?= $course['status'] ?></span></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- CGPA Calculation -->
+                            <?php
+                            $cgpa = $total_courses > 0 ? round($total_grade_points / $total_courses, 2) : 0;
+                            $total_marks_sum = array_sum(array_column($course_gpa_data, 'total_marks'));
+                            $overall_percentage = $total_courses > 0 ? round($total_marks_sum / $total_courses) : 0;
+                            
+                            // Determine CGPA classification
+                            $classification = '';
+                            $class_color = '';
+                            if ($cgpa >= 3.8) {
+                                $classification = 'Dean\'s List - Outstanding';
+                                $class_color = 'success';
+                            } elseif ($cgpa >= 3.5) {
+                                $classification = 'Excellent';
+                                $class_color = 'success';
+                            } elseif ($cgpa >= 3.0) {
+                                $classification = 'Very Good';
+                                $class_color = 'primary';
+                            } elseif ($cgpa >= 2.5) {
+                                $classification = 'Good';
+                                $class_color = 'info';
+                            } elseif ($cgpa >= 2.0) {
+                                $classification = 'Satisfactory';
+                                $class_color = 'warning';
+                            } elseif ($cgpa > 0) {
+                                $classification = 'Pass';
+                                $class_color = 'warning';
+                            } else {
+                                $classification = 'Academic Probation';
+                                $class_color = 'danger';
+                            }
+                            ?>
+                            
+                            <!-- CGPA Display Cards -->
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <div class="card component-card h-100">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-calculator"></i> CGPA</h5>
+                                            <p class="display-4 text-primary"><?= $cgpa ?></p>
+                                            <small class="text-muted">out of 4.00</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card component-card h-100">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-percentage"></i> Overall %</h5>
+                                            <p class="display-4 text-primary"><?= $overall_percentage ?>%</p>
+                                            <small class="text-muted">Aggregate</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card component-card h-100">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-book"></i> Courses</h5>
+                                            <p class="display-4 text-primary"><?= $total_courses ?></p>
+                                            <small class="text-muted"><?= $passed_courses ?> Passed, <?= $failed_courses ?> Failed</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card component-card h-100">
+                                        <div class="card-body">
+                                            <h5><i class="fas fa-award"></i> Classification</h5>
+                                            <p class="display-6 text-<?= $class_color ?>"><?= $classification ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Grade Scale Legend -->
+                            <div class="mt-4">
+                                <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Grade Scale</h5>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-secondary">
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th>Points</th>
+                                                    <th>Percentage</th>
+                                                    <th>Description</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td><span class="badge bg-success">A+</span></td><td>4.0</td><td>95-100%</td><td>Outstanding</td></tr>
+                                                <tr><td><span class="badge bg-success">A</span></td><td>3.9</td><td>90-94%</td><td>Excellent</td></tr>
+                                                <tr><td><span class="badge bg-success">A-</span></td><td>3.7</td><td>85-89%</td><td>Very Good</td></tr>
+                                                <tr><td><span class="badge bg-primary">B+</span></td><td>3.5</td><td>80-84%</td><td>Good</td></tr>
+                                                <tr><td><span class="badge bg-primary">B+</span></td><td>3.4</td><td>75-79%</td><td>Good</td></tr>
+                                                <tr><td><span class="badge bg-primary">B</span></td><td>3.2</td><td>70-74%</td><td>Above Average</td></tr>
+                                                <tr><td><span class="badge bg-primary">B</span></td><td>3.0</td><td>65-69%</td><td>Good</td></tr>
+                                                <tr><td><span class="badge bg-info">B-</span></td><td>2.8</td><td>60-64%</td><td>Satisfactory</td></tr>
+                                                <tr><td><span class="badge bg-info">C+</span></td><td>2.5</td><td>55-59%</td><td>Above Pass</td></tr>
+                                                <tr><td><span class="badge bg-info">C</span></td><td>2.0</td><td>50-54%</td><td>Pass</td></tr>
+                                                <tr><td><span class="badge bg-warning">C-</span></td><td>1.5</td><td>45-49%</td><td>Marginal Pass</td></tr>
+                                                <tr><td><span class="badge bg-warning">D</span></td><td>1.0</td><td>40-44%</td><td>Low Pass</td></tr>
+                                                <tr><td><span class="badge bg-danger">F</span></td><td>0.0</td><td>< 40%</td><td>Fail</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     
                     <div class="no-print text-center action-buttons">
                         <button onclick="window.print()" class="btn btn-primary btn-lg me-3">
@@ -647,5 +956,6 @@ function get_component_marks($student_id, $course_id, $component) {
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>

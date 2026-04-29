@@ -309,5 +309,6 @@ if (isset($_POST['student_id'])) {
         });
     }
 </script>
+    <?php include '../includes/footer.php'; ?>
 </body>
 </html>
