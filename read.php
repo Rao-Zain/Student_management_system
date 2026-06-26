@@ -1,7 +1,7 @@
 <?php
 session_start();
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'Admin' && strtolower($_SESSION['user_role']) !== 'teacher')) {
-    header('Location: auth/login.php?error=Unauthorized access');
+    header('Location: /student_management_system/auth/login.php?error=Unauthorized access');
     exit();
 }
 include 'config/connection.php';

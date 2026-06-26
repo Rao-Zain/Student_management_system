@@ -5,7 +5,7 @@ include "includes/header.php";
 
 // Check if the user is logged in and is an admin
 if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
-    header('Location: login.php?error=Unauthorized access');
+    header('Location: /student_management_system/auth/login.php?error=Unauthorized access');
     exit();
 }
 
@@ -70,7 +70,7 @@ $result = $stmt->get_result();
                                     <?php if ($user['id'] != $_SESSION['user_id']): ?>
                                         <form action="update_user_role.php" method="POST" class="inline-block">
                                             <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
-                                            <button type="submit" name="make_teacher" class="bg-orange-500 text-white py-1 px-3 rounded hover:bg-orange-600 transition text-xs font-bold shadow-sm">Make Teacher</button>
+                                            <button type="submit" name="make_teacher" class="bg-green-700 text-white py-1 px-3 rounded hover:bg-green-800 transition text-xs font-bold shadow-sm">Make Teacher</button>
                                         </form>
                                         <form action="update_user_role.php" method="POST" class="inline-block">
                                             <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
@@ -82,7 +82,7 @@ $result = $stmt->get_result();
                                 <?php elseif (strtolower($user['role']) === 'teacher'): ?>
                                     <form action="update_user_role.php" method="POST" class="inline-block">
                                         <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
-                                        <button type="submit" name="make_admin" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition text-xs font-bold shadow-sm">Make Admin</button>
+                                        <button type="submit" name="make_admin" class="bg-red-700 text-white py-1 px-3 rounded hover:bg-blue-600 transition text-xs font-bold shadow-sm">Make Admin</button>
                                     </form>
                                     <form action="update_user_role.php" method="POST" class="inline-block">
                                         <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
@@ -91,11 +91,11 @@ $result = $stmt->get_result();
                                 <?php else: ?>
                                     <form action="update_user_role.php" method="POST" class="inline-block">
                                         <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
-                                        <button type="submit" name="make_admin" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 transition text-xs font-bold shadow-sm">Make Admin</button>
+                                        <button type="submit" name="make_admin" class="bg-red-700 text-white py-1 px-3 rounded hover:bg-blue-600 transition text-xs font-bold shadow-sm">Make Admin</button>
                                     </form>
                                     <form action="update_user_role.php" method="POST" class="inline-block">
                                         <input type="hidden" name="user_id" value="<?= htmlspecialchars($user['id']) ?>">
-                                        <button type="submit" name="make_teacher" class="bg-orange-500 text-white py-1 px-3 rounded hover:bg-orange-600 transition text-xs font-bold shadow-sm">Make Teacher</button>
+                                        <button type="submit" name="make_teacher" class="bg-green-700 text-white py-1 px-3 rounded hover:bg-blue-800 transition text-xs font-bold shadow-sm">Make Teacher</button>
                                     </form>
                                 <?php endif; ?>
                             </td>

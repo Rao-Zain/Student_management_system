@@ -49,7 +49,7 @@ $search = $_GET['search'] ?? '';
 // Build query with filters
 $where_clauses = [];
 if ($filter_type) {
-    $where_clauses[] = "e.exam_type_id = $filter_type";
+    $where_clauses[] = "et.name = '" . $conn->real_escape_string($filter_type) . "'";
 }
 if ($search) {
     $where_clauses[] = "(e.name LIKE '%$search%' OR c.course_name LIKE '%$search%')";
@@ -58,7 +58,7 @@ if ($search) {
 $where_sql = count($where_clauses) > 0 ? "WHERE " . implode(" AND ", $where_clauses) : "";
 
 // Get all exams with their types
-$exams_query = "SELECT e.*, et.name as exam_type, et.max_marks, c.course_name,
+$exams_query = "SELECT DISTINCT e.exam_id, e.name, e.exam_date, e.description, e.duration_minutes, e.is_active, et.name as exam_type, et.max_marks, c.course_name,
                 (SELECT COUNT(*) FROM student_grades WHERE exam_id = e.exam_id) as grades_entered
                 FROM exams e
                 JOIN exam_types et ON e.exam_type_id = et.exam_type_id
@@ -73,7 +73,7 @@ $upcoming_exams = $conn->query("SELECT COUNT(*) as count FROM exams WHERE exam_d
 $completed_exams = $conn->query("SELECT COUNT(*) as count FROM exams WHERE exam_date < CURDATE()")->fetch_assoc()['count'];
 
 // Get all exam types for dropdown
-$exam_types = $conn->query("SELECT * FROM exam_types");
+$exam_types = $conn->query("SELECT DISTINCT name FROM exam_types ORDER BY name");
 
 // Get all courses for dropdown
 $courses = $conn->query("SELECT * FROM courses");
@@ -225,12 +225,10 @@ $courses = $conn->query("SELECT * FROM courses");
                 <div class="col-md-3">
                     <select name="filter_type" class="form-select filter-btn">
                         <option value="">All Exam Types</option>
-                        <?php 
-                        $exam_types = $conn->query("SELECT * FROM exam_types");
-                        while ($type = $exam_types->fetch_assoc()): ?>
-                        <option value="<?= $type['exam_type_id'] ?>" 
-                            <?= $filter_type == $type['exam_type_id'] ? 'selected' : '' ?>>
-                            <?= $type['name'] ?>
+                        <?php while ($type = $exam_types->fetch_assoc()): ?>
+                        <option value="<?= htmlspecialchars($type['name']) ?>" 
+                            <?= $filter_type == $type['name'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($type['name']) ?>
                         </option>
                         <?php endwhile; ?>
                     </select>
@@ -388,10 +386,10 @@ $courses = $conn->query("SELECT * FROM courses");
                             <label class="form-label">Exam Type <span class="text-danger">*</span></label>
                             <select name="exam_type_id" class="form-select" required>
                                 <?php 
-                                $exam_types = $conn->query("SELECT * FROM exam_types");
+                                $exam_types = $conn->query("SELECT MIN(exam_type_id) AS exam_type_id, name, max_marks FROM exam_types GROUP BY name, max_marks ORDER BY name");
                                 while ($type = $exam_types->fetch_assoc()): ?>
                                 <option value="<?= $type['exam_type_id'] ?>">
-                                    <?= $type['name'] ?> (Max: <?= $type['max_marks'] ?> marks)
+                                    <?= htmlspecialchars($type['name']) ?> (Max: <?= htmlspecialchars($type['max_marks']) ?> marks)
                                 </option>
                                 <?php endwhile; ?>
                             </select>
