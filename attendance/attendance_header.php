@@ -244,8 +244,8 @@ if (session_status() === PHP_SESSION_NONE) {
                     <div class="dropdown">
                         <div class="dropdown-btn"><i class="fas fa-clipboard-check"></i> Attendance</div>
                         <div class="dropdown-content">
-                            <a href="attendance.php"><i class="fa fa-user-check"></i> Mark Attendance</a>
-                            <a href="view.php"><i class="fas fa-clock"></i> View Attendance</a>
+                            <a href="/Student_management_system/attendance/attendance.php"><i class="fa fa-user-check"></i> Mark Attendance</a>
+                            <a href="/Student_management_system/attendance/view.php"><i class="fas fa-clock"></i> View Attendance</a>
                         </div>
                     </div>
                     
@@ -264,7 +264,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <div class="dropdown">
                         <div class="dropdown-btn"><i class="fas fa-user-circle"></i> <?php echo $_SESSION['username']; ?></div>
                         <div class="dropdown-content">
-                            <a href="../auth/profile.php"><i class="fas fa-user-cog"></i> Profile</a>
+                            <a href="../teachers/teacher_profile.php"><i class="fas fa-user-cog"></i> Profile</a>
                             <a href="../auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
                         </div>
                     </div>
